@@ -196,7 +196,7 @@ clear_ram:
   ; load palettes
   JSR load_palettes
 
-  LDA #%10010000  ; turn on NMIs, sprites use first pattern table
+  LDA #%10000000  ; turn on NMIs, sprites use second pattern table
   STA PPUCTRL
   LDA #%00011110  ; turn on screen
   STA PPUMASK
@@ -302,7 +302,7 @@ etc:
 
   VBLANK
 
-  LDA #%10010000  ; turn on NMIs, sprites use first pattern table
+  LDA #%10000000  ; turn on NMIs, sprites use second pattern table
   STA PPUCTRL
   LDA #%00011110  ; turn on screen
   STA PPUMASK
@@ -332,7 +332,7 @@ etc:
 
   VBLANK
 
-  LDA #%10010000  ; turn on NMIs, sprites use first pattern table
+  LDA #%10000000  ; turn on NMIs, sprites use second pattern table
   STA PPUCTRL
   LDA #%00011110  ; turn on screen
   STA PPUMASK
@@ -371,7 +371,7 @@ etc:
 
   VBLANK
 
-  LDA #%10010000  ; turn on NMIs, sprites use first pattern table
+  LDA #%10000000  ; turn on NMIs, sprites use second pattern table
   STA PPUCTRL
   LDA #%00011110  ; turn on screen
   STA PPUMASK
@@ -466,5 +466,5 @@ nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_game_over: .incbin "../assets/nametables/game_over.rle"
 
 .segment "CHR"
-.incbin "../assets/chr/sprites.chr"
 .incbin "../assets/chr/bg1.chr"
+.incbin "../assets/chr/sprites.chr"

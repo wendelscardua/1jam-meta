@@ -2,11 +2,11 @@
 .byte "NES", $1a ; Magic string that always begins an iNES header
 
 .byte $02        ; Number of 16KB PRG-ROM banks (LSB)
-.byte $04        ; Number of 8KB CHR-ROM banks (LSB)
+.byte $01        ; Number of 8KB CHR-ROM banks (LSB)
 
 ; NES 2.0 Header info from NESDev wiki: https://wiki.nesdev.com/w/index.php/NES_2.0
 
-.byte %00110001  ; Flags 6
+.byte %01000001  ; Flags 6
 ;      NNNNFTBM
 ;      |||||||+--- Hard-wired nametable mirroring type
 ;      |||||||      0: Horizontal or mapper-controlled
