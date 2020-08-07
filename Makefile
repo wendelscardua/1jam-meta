@@ -19,13 +19,14 @@ debug: LD65_FLAGS += -Ln labels.txt --dbgfile ${PROJECT}.nes.dbg
 debug: CA65_FLAGS += -g -DDEBUG=1
 debug: ${TARGET}
 
-src/${PROJECT}.o: src/${PROJECT}.s src/constants.inc src/header.inc src/famitone2.s \
-	assets/metasprites.s assets/bg-palettes.pal assets/sprite-palettes.pal \
+src/${PROJECT}.o: src/${PROJECT}.s src/constants.inc src/mmc3-constants.inc src/header.inc \
+	src/famitone2.s \
+	assets/metasprites.s \
+	assets/bg-palettes.pal assets/sprite-palettes.pal \
+	assets/nametables/title.rle \
 	assets/nametables/main.rle \
-	assets/chr/bg1.chr \
-	assets/chr/bg2.chr \
-	assets/chr/bg3.chr \
-	assets/chr/bg4.chr \
+	assets/chr/main-bg-2k-1.chr \
+	assets/chr/main-bg-2k-2.chr \
 	assets/chr/sprites.chr
 	ca65 src/${PROJECT}.s ${CA65_FLAGS}
 

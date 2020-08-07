@@ -1,4 +1,5 @@
 .include "constants.inc"
+.include "mmc3-constants.inc"
 .include "header.inc"
 
 .feature force_range
@@ -193,8 +194,9 @@ clear_ram:
   INX
   BNE clear_ram
 
-  ; load palettes
   JSR load_palettes
+
+  JSR load_default_chr
 
   LDA #%10000000  ; turn on NMIs, sprites use second pattern table
   STA PPUCTRL
@@ -268,6 +270,40 @@ etc:
   INY
   CPY #$20
   BNE :-
+  RTS
+.endproc
+
+.proc load_default_chr
+  ; bg
+  LDA #0
+  STA BANK_SELECT
+  LDA #0
+  STA BANK_DATA
+  LDA #1
+  STA BANK_SELECT
+  LDA #2
+  STA BANK_DATA
+
+  ; sprites
+  LDA #2
+  STA BANK_SELECT
+  LDA #4
+  STA BANK_DATA
+
+  LDA #3
+  STA BANK_SELECT
+  LDA #5
+  STA BANK_DATA
+
+  LDA #4
+  STA BANK_SELECT
+  LDA #6
+  STA BANK_DATA
+
+  LDA #5
+  STA BANK_SELECT
+  LDA #7
+  STA BANK_DATA
   RTS
 .endproc
 
@@ -461,10 +497,12 @@ palettes:
 sprites:
 .include "../assets/metasprites.s"
 
-nametable_main: .incbin "../assets/nametables/main.rle"
 nametable_title: .incbin "../assets/nametables/title.rle"
+nametable_main: .incbin "../assets/nametables/main.rle"
 nametable_game_over: .incbin "../assets/nametables/game_over.rle"
+nametable_level_demo: .incbin "../assets/nametables/demo-level.rle"
 
 .segment "CHR"
-.incbin "../assets/chr/bg1.chr"
+.incbin "../assets/chr/main-bg-2k-1.chr"
+.incbin "../assets/chr/main-bg-2k-2.chr"
 .incbin "../assets/chr/sprites.chr"
