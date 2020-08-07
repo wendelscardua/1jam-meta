@@ -111,6 +111,8 @@ old_nmis: .res 1
 
 game_state: .res 1
 
+current_level: .res 1
+
 sprite_counter: .res 1
 
 debug_x: .res 1
@@ -220,7 +222,10 @@ clear_ram:
   LDA #$73
   STA rng_seed+1
 
-  JSR go_to_title
+  ; JSR go_to_title ; TODO: reenable later
+  LDA #0
+  STA current_level
+  JSR go_to_playing
 
 forever:
   LDA nmis
@@ -360,9 +365,10 @@ etc:
   LDA #$00
   STA PPUADDR
 
-  LDA #<nametable_main
+  LDX current_level
+  LDA nametable_for_level_l, X
   STA rle_ptr
-  LDA #>nametable_main
+  LDA nametable_for_level_h, X
   STA rle_ptr+1
   JSR unrle
 
@@ -496,6 +502,11 @@ palettes:
 
 sprites:
 .include "../assets/metasprites.s"
+
+nametable_for_level_l:
+  .byte <(nametable_level_demo)
+nametable_for_level_h:
+  .byte >(nametable_level_demo)
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
