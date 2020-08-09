@@ -128,7 +128,7 @@ current_level: .res 1
 
 anim_offset: .res 1
 
-MAX_OBJECTS = 32
+MAX_OBJECTS = 20
 objects_length: .res 1
 object_x: .res MAX_OBJECTS
 object_y: .res MAX_OBJECTS
@@ -512,6 +512,7 @@ etc:
   STA temp_y
   LDA object_flags, Y
   AND #OBJ_ANIM_MASK
+  ASL
   ASL
   CLC
   ADC anim_offset
