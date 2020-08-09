@@ -408,6 +408,15 @@ etc:
   STA object_y, X
   LDA #%01000000
   STA object_flags, X
+
+  LDA #$0
+  STA object_sx, X
+  STA object_sy, X
+  STA object_vx, X
+  STA object_svx, X
+  STA object_vy, X
+  STA object_svy, X
+
   INX
 
   STX objects_length
@@ -474,32 +483,52 @@ etc:
 .endproc
 
 .proc platforming_input
-  LDA #$0
-  STA object_vx
-  STA object_svx
+  LDA object_vx
+  BMI @negative_speed
+  BEQ @tiebreak
+  JMP @positive_speed
+
+@tiebreak:
+  LDA object_svx
+  BMI @negative_speed
+  BEQ @zero_speed
+  JMP @positive_speed
+@zero_speed:
   LDA object_flags
   AND #%11000001
   STA object_flags
+  JMP @endspeed
+@positive_speed:
+  LDA object_flags
+  AND #%11000000
+  ORA #%00000010
+  STA object_flags
+  JMP @endspeed
+@negative_speed:
+  LDA object_flags
+  AND #%11000000
+  ORA #%00000011
+  STA object_flags
+  ; JMP @endspeed
+@endspeed:
 
   JSR readjoy
   LDA buttons
   AND #BUTTON_LEFT
   BEQ :+
 
-  LDA object_flags
-  ORA #%1
-  STA object_flags
+  LDA #%11111111
+  STA object_vx
+  LDA #%11000000
+  STA object_svx
 
 :
   LDA buttons
   AND #BUTTON_RIGHT
   BEQ :+
 
-  LDA object_flags
-  AND #%11111110
-  ORA #%00000010
-  STA object_flags
-
+  LDA #%00000000
+  STA object_vx
   LDA #%01000000
   STA object_svx
 
