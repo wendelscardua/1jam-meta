@@ -128,20 +128,6 @@ current_level: .res 1
 
 anim_offset: .res 1
 
-MAX_OBJECTS = 20
-objects_length: .res 1
-object_x: .res MAX_OBJECTS
-object_y: .res MAX_OBJECTS
-OBJ_ANIM_MASK = %00111111
-OBJ_MOVE_FLAG = %01000000
-object_flags: .res MAX_OBJECTS
-; flags:
-; ?maaaaaf
-; |||||||+- flip (0 = face right, 1 = face left)
-; ||++++++- anim "index" (* 4 + anim frame = actual anim_sprites index)
-; |+------- move flag, tells if object moves
-; +-------- unused (for now)
-
 sprite_counter: .res 1
 
 debug_x: .res 1
@@ -150,6 +136,26 @@ debug_a: .res 1
 
 .segment "BSS"
 ; non-zp RAM goes here
+
+MAX_OBJECTS = 20
+objects_length: .res 1
+object_x: .res MAX_OBJECTS
+object_sx: .res MAX_OBJECTS
+object_y: .res MAX_OBJECTS
+object_sy: .res MAX_OBJECTS
+object_vx: .res MAX_OBJECTS
+object_svx: .res MAX_OBJECTS
+object_vy: .res MAX_OBJECTS
+object_svy: .res MAX_OBJECTS
+object_flags: .res MAX_OBJECTS
+; flags:
+; ?maaaaaf
+; |||||||+- flip (0 = face right, 1 = face left)
+; ||++++++- anim "index" (* 4 + anim frame = actual anim_sprites index)
+; |+------- move flag, tells if object moves
+; +-------- unused (for now)
+OBJ_ANIM_MASK = %00111111
+OBJ_MOVE_FLAG = %01000000
 
 .segment "CODE"
 
@@ -262,7 +268,7 @@ forever:
   JSR game_state_handler
   JSR screen_stuff
   JSR FamiToneUpdate
-
+  JSR physics_update
 etc:
   JSR rand ; shuffle rng around
   JMP forever
@@ -468,6 +474,13 @@ etc:
 .endproc
 
 .proc platforming_input
+  LDA #$0
+  STA object_vx
+  STA object_svx
+  LDA object_flags
+  AND #%11000001
+  STA object_flags
+
   JSR readjoy
   LDA buttons
   AND #BUTTON_LEFT
@@ -483,8 +496,12 @@ etc:
   BEQ :+
 
   LDA object_flags
-  AND #~%1
+  AND #%11111110
+  ORA #%00000010
   STA object_flags
+
+  LDA #%01000000
+  STA object_svx
 
 :
   RTS
@@ -524,6 +541,38 @@ etc:
   save_regs
   JSR display_metasprite
   restore_regs
+  INY
+  CPY objects_length
+  BNE @loop
+
+  RTS
+.endproc
+
+.proc physics_update
+  LDA game_state
+  CMP #game_states::playing
+  BEQ :+
+  RTS
+:
+  LDY #0
+@loop:
+  ; (x:sx, y:sy) += (vx:svx, vy:svy)
+  CLC
+  LDA object_sx, Y
+  ADC object_svx, Y
+  STA object_sx, Y
+  LDA object_x, Y
+  ADC object_vx, Y
+  STA object_x, Y
+
+  CLC
+  LDA object_sy, Y
+  ADC object_svy, Y
+  STA object_sy, Y
+  LDA object_y, Y
+  ADC object_vy, Y
+  STA object_y, Y
+
   INY
   CPY objects_length
   BNE @loop
