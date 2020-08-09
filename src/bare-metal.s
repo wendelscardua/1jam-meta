@@ -136,7 +136,8 @@ OBJ_ANIM_MASK = %00111111
 OBJ_MOVE_FLAG = %01000000
 object_flags: .res MAX_OBJECTS
 ; flags:
-; ?maaaaaa
+; ?maaaaaf
+; |||||||+- flip (0 = face right, 1 = face left)
 ; ||++++++- anim "index" (* 4 + anim frame = actual anim_sprites index)
 ; |+------- move flag, tells if object moves
 ; +-------- unused (for now)
@@ -466,8 +467,32 @@ etc:
   RTS
 .endproc
 
-.proc playing
+.proc platforming_input
+  JSR readjoy
+  LDA buttons
+  AND #BUTTON_LEFT
+  BEQ :+
 
+  LDA object_flags
+  ORA #%1
+  STA object_flags
+
+:
+  LDA buttons
+  AND #BUTTON_RIGHT
+  BEQ :+
+
+  LDA object_flags
+  AND #~%1
+  STA object_flags
+
+:
+  RTS
+.endproc
+
+.proc playing
+  JSR platforming_input
+  
   ; render objects' sprites
   LDA #0
   STA sprite_counter
@@ -487,7 +512,6 @@ etc:
   STA temp_y
   LDA object_flags, Y
   AND #OBJ_ANIM_MASK
-  ASL
   ASL
   CLC
   ADC anim_offset
@@ -570,11 +594,21 @@ anim_sprites_l:
   .byte <metasprite_1_data
   .byte <metasprite_0_data
   .byte <metasprite_1_data
-  ; robot, walk
-  .byte <metasprite_0_data
+  ; robot, idle, flip
   .byte <metasprite_2_data
   .byte <metasprite_3_data
+  .byte <metasprite_2_data
+  .byte <metasprite_3_data
+  ; robot, walk
+  .byte <metasprite_0_data
   .byte <metasprite_4_data
+  .byte <metasprite_5_data
+  .byte <metasprite_6_data
+  ; robot, walk, flip
+  .byte <metasprite_2_data
+  .byte <metasprite_7_data
+  .byte <metasprite_8_data
+  .byte <metasprite_9_data
 
 anim_sprites_h:
   ; robot, idle
@@ -582,11 +616,21 @@ anim_sprites_h:
   .byte >metasprite_1_data
   .byte >metasprite_0_data
   .byte >metasprite_1_data
-  ; robot, walk
-  .byte >metasprite_0_data
+  ; robot, idle, flip
   .byte >metasprite_2_data
   .byte >metasprite_3_data
+  .byte >metasprite_2_data
+  .byte >metasprite_3_data
+  ; robot, walk
+  .byte >metasprite_0_data
   .byte >metasprite_4_data
+  .byte >metasprite_5_data
+  .byte >metasprite_6_data
+  ; robot, walk, flip
+  .byte >metasprite_2_data
+  .byte >metasprite_7_data
+  .byte >metasprite_8_data
+  .byte >metasprite_9_data
 
 
 nametable_for_level_l:
