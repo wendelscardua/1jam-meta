@@ -36,6 +36,19 @@ FT_DPCM_OFF=$c000
   restore_regs
 .endmacro
 
+.macro SCREEN_OFF
+  LDA #$00
+  STA PPUCTRL ; disable NMI
+  STA PPUMASK ; disable rendering
+.endmacro
+
+.macro SCREEN_ON
+  LDA #%10001000  ; turn on NMIs, sprites use second pattern table
+  STA PPUCTRL
+  LDA #%00011110  ; turn on screen
+  STA PPUMASK
+.endmacro
+
 ; game config
 
 ; debug - macros for NintendulatorDX interaction
@@ -112,6 +125,21 @@ old_nmis: .res 1
 game_state: .res 1
 
 current_level: .res 1
+
+anim_offset: .res 1
+
+MAX_OBJECTS = 32
+objects_length: .res 1
+object_x: .res MAX_OBJECTS
+object_y: .res MAX_OBJECTS
+OBJ_ANIM_MASK = %00111111
+OBJ_MOVE_FLAG = %01000000
+object_flags: .res MAX_OBJECTS
+; flags:
+; ?maaaaaa
+; ||++++++- anim "index" (* 4 + anim frame = actual anim_sprites index)
+; |+------- move flag, tells if object moves
+; +-------- unused (for now)
 
 sprite_counter: .res 1
 
@@ -200,10 +228,7 @@ clear_ram:
 
   JSR load_default_chr
 
-  LDA #%10000000  ; turn on NMIs, sprites use second pattern table
-  STA PPUCTRL
-  LDA #%00011110  ; turn on screen
-  STA PPUMASK
+  SCREEN_ON
 
   LDX #<music_data
   LDY #>music_data
@@ -325,9 +350,7 @@ etc:
   LDA #game_states::waiting_to_start
   STA game_state
 
-  LDA #$00
-  STA PPUCTRL ; disable NMI
-  STA PPUMASK ; disable rendering
+  SCREEN_OFF
 
   LDA PPUSTATUS
   LDA #$20
@@ -343,10 +366,7 @@ etc:
 
   VBLANK
 
-  LDA #%10000000  ; turn on NMIs, sprites use second pattern table
-  STA PPUCTRL
-  LDA #%00011110  ; turn on screen
-  STA PPUMASK
+  SCREEN_ON
 
   RTS
 .endproc
@@ -355,9 +375,7 @@ etc:
   LDA #game_states::playing
   STA game_state
 
-  LDA #$00
-  STA PPUCTRL ; disable NMI
-  STA PPUMASK ; disable rendering
+  SCREEN_OFF
 
   LDA PPUSTATUS
   LDA #$20
@@ -372,12 +390,24 @@ etc:
   STA rle_ptr+1
   JSR unrle
 
+  LDX #0
+  STX objects_length
+
+  ; add robot (robot is always the first object)
+  ; TODO read from level data
+  LDA #$80
+  STA object_x, X
+  LDA #$70
+  STA object_y, X
+  LDA #%01000000
+  STA object_flags, X
+  INX
+
+  STX objects_length
+
   VBLANK
 
-  LDA #%10000000  ; turn on NMIs, sprites use second pattern table
-  STA PPUCTRL
-  LDA #%00011110  ; turn on screen
-  STA PPUMASK
+  SCREEN_ON
 
   RTS
 .endproc
@@ -396,9 +426,7 @@ etc:
   .endrepeat
   BNE :-
 
-  LDA #$00
-  STA PPUCTRL ; disable NMI
-  STA PPUMASK ; disable rendering
+  SCREEN_OFF
 
   LDA #$22
   STA PPUADDR
@@ -413,10 +441,7 @@ etc:
 
   VBLANK
 
-  LDA #%10000000  ; turn on NMIs, sprites use second pattern table
-  STA PPUCTRL
-  LDA #%00011110  ; turn on screen
-  STA PPUMASK
+  SCREEN_ON
 
   RTS
 .endproc
@@ -442,6 +467,42 @@ etc:
 .endproc
 
 .proc playing
+
+  ; render objects' sprites
+  LDA #0
+  STA sprite_counter
+
+  LDA nmis
+  AND #%11000
+  LSR
+  LSR
+  LSR
+  STA anim_offset
+  
+  LDY #0
+@loop:
+  LDA object_x, Y
+  STA temp_x
+  LDA object_y, Y
+  STA temp_y
+  LDA object_flags, Y
+  AND #OBJ_ANIM_MASK
+  ASL
+  ASL
+  CLC
+  ADC anim_offset
+  TAX
+  LDA anim_sprites_l, X
+  STA addr_ptr
+  LDA anim_sprites_h, X
+  STA addr_ptr+1
+  save_regs
+  JSR display_metasprite
+  restore_regs
+  INY
+  CPY objects_length
+  BNE @loop
+
   RTS
 .endproc
 
@@ -502,6 +563,31 @@ palettes:
 
 sprites:
 .include "../assets/metasprites.s"
+
+anim_sprites_l:
+  ; robot, idle
+  .byte <metasprite_0_data
+  .byte <metasprite_1_data
+  .byte <metasprite_0_data
+  .byte <metasprite_1_data
+  ; robot, walk
+  .byte <metasprite_0_data
+  .byte <metasprite_2_data
+  .byte <metasprite_3_data
+  .byte <metasprite_4_data
+
+anim_sprites_h:
+  ; robot, idle
+  .byte >metasprite_0_data
+  .byte >metasprite_1_data
+  .byte >metasprite_0_data
+  .byte >metasprite_1_data
+  ; robot, walk
+  .byte >metasprite_0_data
+  .byte >metasprite_2_data
+  .byte >metasprite_3_data
+  .byte >metasprite_4_data
+
 
 nametable_for_level_l:
   .byte <(nametable_level_demo)
