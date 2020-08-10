@@ -284,10 +284,6 @@ etc:
 .proc screen_stuff
   ; Fix Scroll
   LDA PPUSTATUS
-  LDA #$20
-  STA PPUADDR
-  LDA #$00
-  STA PPUADDR
 
   LDA scroll_sx
   ASL
@@ -304,7 +300,6 @@ etc:
   ORA #%10001000  ; turn on NMIs, sprites use second pattern table
   
   STA PPUCTRL
-
 
   ; Refresh OAM
   LDA #$00
@@ -601,7 +596,7 @@ etc:
 
   LDA object_vx
   CMP #%00000100
-  BPL :+
+  BCS :+
 
   CLC
   LDA object_svx
@@ -698,36 +693,47 @@ etc:
   CPY objects_length
   BNE @loop
 
-  ; move scroll according to robot position
+  JSR update_scroll
 
-  LDA object_sx
-  SBC scroll_sx
-  STA temp_sx
-  LDA object_x
-  SBC scroll_x
-  STA temp_x
+  RTS
+.endproc
+
+.proc update_scroll
+  ; move scroll according to robot position
 
   ; $80 = 1000 0000 (8.0) =
   ;       0100 0000  0000 0000 (9.7)
-  CMP #%01000000
-  BMI @noscroll
 
   LDA object_x
+  CMP #%01000000
+  BCS @far_from_left
+
+  LDA #%00000000
+  STA scroll_x
+  STA scroll_sx
+  RTS
+
+@far_from_left:
   SEC
+  LDA object_sx
+  SBC #%00000000
+  STA scroll_sx
+  LDA object_x
   SBC #%01000000
   STA scroll_x
-  LDA object_sx
-  STA scroll_sx
-
-  LDA scroll_x
   CMP #%10000000
-  BMI @noscroll
+  BCC @far_from_right
+
   LDA #%10000000
   STA scroll_x
   LDA #%00000000
   STA scroll_sx
+  RTS
 
-@noscroll:
+@far_from_right:
+  STA scroll_x
+  LDA object_sx
+  STA scroll_sx
 
   RTS
 .endproc
