@@ -490,7 +490,6 @@ etc:
 
 @tiebreak:
   LDA object_svx
-  BMI @negative_speed
   BEQ @zero_speed
   JMP @positive_speed
 @zero_speed:
@@ -503,12 +502,41 @@ etc:
   AND #%11000000
   ORA #%00000010
   STA object_flags
+
+  ; decay positive speed
+
+  CLC
+  LDA object_svx
+  ADC #%11100000
+  STA object_svx
+  LDA object_vx
+  ADC #%11111111
+  STA object_vx
+  BPL @endspeed
+  LDA #$0
+  STA object_vx
+  STA object_svx
+
   JMP @endspeed
 @negative_speed:
   LDA object_flags
   AND #%11000000
   ORA #%00000011
   STA object_flags
+
+  ; decay negative speed
+  CLC
+  LDA object_svx
+  ADC #%00100000
+  STA object_svx
+  LDA object_vx
+  ADC #%00000000
+  STA object_vx
+  BMI @endspeed
+  LDA #$0
+  STA object_vx
+  STA object_svx
+
   ; JMP @endspeed
 @endspeed:
 
@@ -517,20 +545,36 @@ etc:
   AND #BUTTON_LEFT
   BEQ :+
 
-  LDA #%11111111
-  STA object_vx
-  LDA #%11000000
+  LDA object_vx
+  CMP #%11111100
+  BEQ :+
+
+  CLC
+  LDA object_svx
+  ADC #%11010000
   STA object_svx
+
+  LDA object_vx
+  ADC #%11111111
+  STA object_vx
 
 :
   LDA buttons
   AND #BUTTON_RIGHT
   BEQ :+
 
-  LDA #%00000000
-  STA object_vx
-  LDA #%01000000
+  LDA object_vx
+  CMP #%00000100
+  BPL :+
+
+  CLC
+  LDA object_svx
+  ADC #%00110000
   STA object_svx
+
+  LDA object_vx
+  ADC #%00000000
+  STA object_vx
 
 :
   RTS
