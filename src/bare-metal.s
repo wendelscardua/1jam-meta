@@ -137,6 +137,9 @@ debug_a: .res 1
 .segment "BSS"
 ; non-zp RAM goes here
 
+; object coordinates use subpixels for fractional movement
+; (object_y, object_sy) = 8.8 number
+; (object_x, object_sx) = 8.8 number
 MAX_OBJECTS = 20
 objects_length: .res 1
 object_x: .res MAX_OBJECTS
