@@ -284,12 +284,22 @@ etc:
 .proc screen_stuff
   ; Fix Scroll
   LDA PPUSTATUS
-  LDA #$20
+  LDA scroll_x
+  AND #%10000000
+  CLC
+  ROL
+  ROL
+  ROL
+  ADC #$20
   STA PPUADDR
   LDA #$00
   STA PPUADDR
-  LDA #$00 ; horizontal scroll
-  STA PPUSCROLL
+  LDA scroll_sx
+  ASL
+  LDA scroll_x
+  ROL
+  STA PPUSCROLL ; horizontal scroll
+  LDA #$00
   STA PPUSCROLL
 
   ; Refresh OAM
@@ -422,7 +432,7 @@ etc:
 
   ; add robot (robot is always the first object)
   ; TODO read from level data
-  LDA #$80
+  LDA #$30
   STA object_x, X
   LDA #$70
   STA object_y, X
@@ -683,6 +693,29 @@ etc:
   INY
   CPY objects_length
   BNE @loop
+
+  ; move scroll according to robot position
+
+  LDA object_sx
+  SBC scroll_sx
+  STA temp_sx
+  LDA object_x
+  SBC scroll_x
+  STA temp_x
+
+  ; $80 = 1000 0000 (8.0) =
+  ;       0100 0000  0000 0000 (9.7)
+  CMP #%01000000
+  BMI @noscroll
+
+  LDA object_x
+  SEC
+  SBC #%01000000
+  STA scroll_x
+  LDA object_sx
+  STA scroll_sx
+
+@noscroll:
 
   RTS
 .endproc
