@@ -284,16 +284,11 @@ etc:
 .proc screen_stuff
   ; Fix Scroll
   LDA PPUSTATUS
-  LDA scroll_x
-  AND #%10000000
-  CLC
-  ROL
-  ROL
-  ROL
-  ADC #$20
+  LDA #$20
   STA PPUADDR
   LDA #$00
   STA PPUADDR
+
   LDA scroll_sx
   ASL
   LDA scroll_x
@@ -301,6 +296,15 @@ etc:
   STA PPUSCROLL ; horizontal scroll
   LDA #$00
   STA PPUSCROLL
+
+  LDA scroll_x
+  AND #%10000000
+  ROL
+  ROL
+  ORA #%10001000  ; turn on NMIs, sprites use second pattern table
+  
+  STA PPUCTRL
+
 
   ; Refresh OAM
   LDA #$00
@@ -713,6 +717,14 @@ etc:
   SBC #%01000000
   STA scroll_x
   LDA object_sx
+  STA scroll_sx
+
+  LDA scroll_x
+  CMP #%10000000
+  BMI @noscroll
+  LDA #%10000000
+  STA scroll_x
+  LDA #%00000000
   STA scroll_sx
 
 @noscroll:
