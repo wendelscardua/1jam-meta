@@ -672,6 +672,10 @@ etc:
 :
   LDY #0
 @loop:
+  LDA object_flags, Y
+  AND #OBJ_MOVE_FLAG
+  BEQ @next
+
   ; (x:sx, y:sy) += (vx:svx, vy:svy)
   CLC
   LDA object_sx, Y
@@ -689,6 +693,7 @@ etc:
   ADC object_vy, Y
   STA object_y, Y
 
+@next:
   INY
   CPY objects_length
   BNE @loop
