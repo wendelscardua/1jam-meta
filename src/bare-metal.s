@@ -117,7 +117,11 @@ addr_ptr: .res 2 ; generic address pointer
 ppu_addr_ptr: .res 2 ; temporary address for PPU_ADDR
 
 temp_x: .res 1
+temp_sx: .res 1
 temp_y: .res 1
+
+scroll_x: .res 1
+scroll_sx: .res 1
 
 nmis: .res 1
 old_nmis: .res 1
@@ -139,7 +143,7 @@ debug_a: .res 1
 
 ; object coordinates use subpixels for fractional movement
 ; (object_y, object_sy) = 8.8 number
-; (object_x, object_sx) = 8.8 number
+; (object_x, object_sx) = 9.7 number (in order to cover two screens)
 MAX_OBJECTS = 20
 objects_length: .res 1
 object_x: .res MAX_OBJECTS
@@ -387,16 +391,29 @@ etc:
 
   SCREEN_OFF
 
+  ; load left/right nametables
+  LDX current_level
+
   LDA PPUSTATUS
   LDA #$20
   STA PPUADDR
   LDA #$00
   STA PPUADDR
 
-  LDX current_level
-  LDA nametable_for_level_l, X
+  LDA left_nametable_for_level_l, X
   STA rle_ptr
-  LDA nametable_for_level_h, X
+  LDA left_nametable_for_level_h, X
+  STA rle_ptr+1
+  JSR unrle
+
+  LDA #$24
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  LDA right_nametable_for_level_l, X
+  STA rle_ptr
+  LDA right_nametable_for_level_h, X
   STA rle_ptr+1
   JSR unrle
 
@@ -419,6 +436,8 @@ etc:
   STA object_svx, X
   STA object_vy, X
   STA object_svy, X
+  STA scroll_x
+  STA scroll_sx
 
   INX
 
@@ -599,8 +618,19 @@ etc:
   
   LDY #0
 @loop:
+  ; temp x = x - scroll x
+  ; TODO skip if out of current screen
+  SEC
+  LDA object_sx, Y
+  SBC scroll_sx
+  STA temp_sx
   LDA object_x, Y
+  SBC scroll_x
   STA temp_x
+
+  ASL temp_sx
+  ROL temp_x
+
   LDA object_y, Y
   STA temp_y
   LDA object_flags, Y
@@ -617,6 +647,7 @@ etc:
   save_regs
   JSR display_metasprite
   restore_regs
+@next:
   INY
   CPY objects_length
   BNE @loop
@@ -759,15 +790,21 @@ anim_sprites_h:
   .byte >metasprite_9_data
 
 
-nametable_for_level_l:
-  .byte <(nametable_level_demo)
-nametable_for_level_h:
-  .byte >(nametable_level_demo)
+left_nametable_for_level_l:
+  .byte <(nametable_level_demo_left)
+left_nametable_for_level_h:
+  .byte >(nametable_level_demo_left)
+
+right_nametable_for_level_l:
+  .byte <(nametable_level_demo_right)
+right_nametable_for_level_h:
+  .byte >(nametable_level_demo_right)
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
 nametable_game_over: .incbin "../assets/nametables/game_over.rle"
-nametable_level_demo: .incbin "../assets/nametables/demo-level.rle"
+nametable_level_demo_left: .incbin "../assets/nametables/template-double-level-left.rle"
+nametable_level_demo_right: .incbin "../assets/nametables/template-double-level-right.rle"
 
 .segment "CHR"
 .incbin "../assets/chr/main-bg-2k-1.chr"
