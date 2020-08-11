@@ -119,6 +119,7 @@ ppu_addr_ptr: .res 2 ; temporary address for PPU_ADDR
 temp_x: .res 1
 temp_sx: .res 1
 temp_y: .res 1
+temp_sy: .res 1
 
 .struct Box
   x1 .byte
@@ -842,6 +843,15 @@ next:
   ADC object_vy, Y
   STA object_y, Y
 
+  JSR prepare_object_hitbox
+  JSR check_wall_collision
+  BEQ @next
+  ; debugOut {"VX: ", fHex8(object_vx), fHex8(object_svx), " VY: ", fHex8(object_vy), fHex8(object_svy), ". "}
+  ; TODO - add special case for robot (Y = 0)
+  JSR handle_object_wall_collision
+  BEQ @next
+  JMP @loop
+
 @next:
   INY
   CPY objects_length
@@ -849,6 +859,87 @@ next:
 
   JSR update_scroll
 
+  RTS
+.endproc
+
+.proc handle_object_wall_collision
+  ; handle collision between Y-index object and X-index wall
+  ; rewinds movement, reduces speed
+  ; if resulting speed = 0, returns Z = 1 (meaning leave object here)
+  ; else returns Z = 0 (needs to replay movement at reduced speed)
+
+  ; rollback movement
+  SEC
+  LDA object_sx, Y
+  SBC object_svx, Y
+  STA object_sx, Y
+  LDA object_x, Y
+  SBC object_vx, Y
+  STA object_x, Y
+  SEC
+  LDA object_sy, Y
+  SBC object_svy, Y
+  STA object_sy, Y
+  LDA object_y, Y
+  SBC object_vy, Y
+  STA object_y, Y
+
+  ; halve speed
+  ; XXX - can't use Y for inc
+  TXA
+  PHA
+  TYA
+  TAX
+
+  ; if odd negative, inc
+  LDA object_vx, X
+  BPL :+
+  INC object_svx, X
+  BNE :+
+  INC object_vx, X
+:
+
+  LDA object_vy, X
+  BPL :+
+  INC object_svy, X
+  BNE :+
+  INC object_vy, X
+:
+
+
+  CLC
+  LDA object_vx, X
+  BPL :+
+  SEC
+:
+  ROR object_vx, X
+  ROR object_svx, X
+
+  CLC
+  LDA object_vy, X
+  BPL :+
+  SEC
+:
+  ROR object_vy, X
+  ROR object_svy, X
+
+  PLA
+  TAX
+
+  ; check if stopped (i.e. both speeds are zero)
+  LDA object_vx, Y
+  BEQ :+
+  RTS
+:
+  LDA object_svx, Y
+  BEQ :+
+  RTS
+:
+  LDA object_vy, Y
+  BEQ :+
+  RTS
+:
+  LDA object_svy, Y
   RTS
 .endproc
 
@@ -997,11 +1088,11 @@ anim_sprites_h:
 ; hitboxes per anim sprite type
 
 sprite_hitbox_x1:
-  .byte $00, $00
+  .byte $01, $01
 sprite_hitbox_y1:
   .byte $00, $00
 sprite_hitbox_x2:
-  .byte $0f, $0f
+  .byte $07, $07
 sprite_hitbox_y2:
   .byte $0f, $0f
 
@@ -1028,7 +1119,10 @@ level_data_pointers_h:
 
 level_0_data:
   .byte $30, $a0
-
+  ; walls
+  .byte 2
+  .byte $00, $00, $08, $ff
+  .byte $f8, $00, $ff, $ff
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
