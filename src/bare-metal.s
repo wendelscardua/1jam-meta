@@ -289,11 +289,27 @@ forever:
   CMP old_nmis
   BEQ etc
   STA old_nmis
+.ifdef DEBUG
+  LDA #%01011110  ; green tint
+  STA PPUMASK
+.endif
   ; new frame code
   JSR game_state_handler
   JSR screen_stuff
+.ifdef DEBUG
+  LDA #%01111110  ; yellow tint
+  STA PPUMASK
+.endif
   JSR FamiToneUpdate
+.ifdef DEBUG
+  LDA #%00111110  ; red tint
+  STA PPUMASK
+.endif
   JSR physics_update
+.ifdef DEBUG
+  LDA #%00011110  ; no tint
+  STA PPUMASK
+.endif
 etc:
   JSR rand ; shuffle rng around
   JMP forever
