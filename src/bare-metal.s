@@ -443,15 +443,29 @@ etc:
   STA rle_ptr+1
   JSR unrle
 
+  LDA #$00
+  STA scroll_x
+  STA scroll_sx
+
+  LDA level_data_pointers_l, X
+  STA addr_ptr
+  LDA level_data_pointers_h, X
+  STA addr_ptr+1
+
+  LDY #0 ; Y iterates over level data
   LDX #0
-  STX objects_length
 
   ; add robot (robot is always the first object)
   ; TODO read from level data
-  LDA #$30
+
+  LDA (addr_ptr), Y ; read robot x
+  INY
   STA object_x, X
-  LDA #$70
+
+  LDA (addr_ptr), Y ; read robot y
+  INY
   STA object_y, X
+
   LDA #%01000000
   STA object_flags, X
 
@@ -462,12 +476,30 @@ etc:
   STA object_svx, X
   STA object_vy, X
   STA object_svy, X
-  STA scroll_x
-  STA scroll_sx
-
   INX
 
   STX objects_length
+
+  LDA (addr_ptr), Y ; read number of walls
+  INY
+  STA walls_length
+  LDX #0
+@wall_loop:
+  LDA (addr_ptr), Y
+  INY
+  STA wall_x1, X
+  LDA (addr_ptr), Y
+  INY
+  STA wall_y1, X
+  LDA (addr_ptr), Y
+  INY
+  STA wall_x2, X
+  LDA (addr_ptr), Y
+  INY
+  STA wall_y2, X
+  INX
+  CPX walls_length
+  BNE @wall_loop
 
   VBLANK
 
@@ -982,6 +1014,21 @@ right_nametable_for_level_l:
   .byte <(nametable_level_demo_right)
 right_nametable_for_level_h:
   .byte >(nametable_level_demo_right)
+
+level_data_pointers_l:
+  .byte <(level_0_data)
+level_data_pointers_h:
+  .byte >(level_0_data)
+
+; level data format
+; robot x, robot y (assume subx = 0)
+; number of walls
+; (for each wall) x1 y1 x2 y2
+
+
+level_0_data:
+  .byte $30, $a0
+
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
