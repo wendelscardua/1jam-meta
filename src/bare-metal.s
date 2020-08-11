@@ -120,6 +120,16 @@ temp_x: .res 1
 temp_sx: .res 1
 temp_y: .res 1
 
+.struct Box
+  x1 .byte
+  y1 .byte
+  x2 .byte
+  y2 .byte
+.endstruct
+
+hitbox_a: .tag Box
+hitbox_b: .tag Box
+
 scroll_x: .res 1
 scroll_sx: .res 1
 
@@ -163,6 +173,13 @@ object_flags: .res MAX_OBJECTS
 ; +-------- unused (for now)
 OBJ_ANIM_MASK = %00111111
 OBJ_MOVE_FLAG = %01000000
+
+MAX_WALLS = 12
+walls_length: .res 1
+wall_x1: .res MAX_WALLS
+wall_y1: .res MAX_WALLS
+wall_x2: .res MAX_WALLS
+wall_y2: .res MAX_WALLS
 
 .segment "CODE"
 
@@ -664,6 +681,106 @@ etc:
   RTS
 .endproc
 
+.proc prepare_object_hitbox
+  ; fills hitbox buffer with current (indexed by Y) object hitbox
+  ; cobbles X, A
+  LDA object_flags, Y
+  AND #OBJ_ANIM_MASK
+  LSR
+  TAX
+
+  CLC
+  LDA sprite_hitbox_x1, X
+  ADC object_x, Y
+  STA hitbox_a+Box::x1
+
+  CLC
+  LDA sprite_hitbox_y1, X
+  ADC object_y, Y
+  STA hitbox_a+Box::y1
+
+  CLC
+  LDA sprite_hitbox_x2, X
+  ADC object_x, Y
+  STA hitbox_a+Box::x2
+
+  CLC
+  LDA sprite_hitbox_y2, X
+  ADC object_y, Y
+  STA hitbox_a+Box::y2
+  RTS
+.endproc
+
+.proc hitbox_collision
+  ; returns 1 in A if hitbox_a and hitbox_b intersect
+  ; Pseudo-code:
+  ;  ((a.x1,a.y1),(a.x2,a.y2)) and ((b.x1,b.y1),(b.x2,b.y2))
+  ;
+  ;  if (a.x2<b.x1 or b.x2<a.x1 or a.y2<b.y1 or b.y2<a.y1):
+  ;      don't intersect
+  ;  else
+  ;      intersect
+  ;
+  ;  Also: foo < bar ==> foo; CMP bar; carry is clear
+  CLC
+  LDA hitbox_a+Box::x2
+  CMP hitbox_b+Box::x1
+  BCS :+
+  LDA #$00
+  RTS
+:
+  CLC
+  LDA hitbox_b+Box::x2
+  CMP hitbox_a+Box::x1
+  BCS :+
+  LDA #$00
+  RTS
+:
+
+  CLC
+  LDA hitbox_a+Box::y2
+  CMP hitbox_b+Box::y1
+  BCS :+
+  LDA #$00
+  RTS
+:
+
+  CLC
+  LDA hitbox_b+Box::y2
+  CMP hitbox_a+Box::y1
+  BCS :+
+  LDA #$00
+  RTS
+:
+  LDA #$01
+  RTS
+.endproc
+
+.proc check_wall_collision
+  ; returns 1 in A if hitbox_a intersects with any wall
+  LDA #0
+  LDX walls_length
+  DEX
+loop:
+  LDA wall_x1, X
+  STA hitbox_b+Box::x1
+  LDA wall_y1, X
+  STA hitbox_b+Box::y1
+  LDA wall_x2, X
+  STA hitbox_b+Box::x2
+  LDA wall_y2, X
+  STA hitbox_b+Box::y2
+  JSR hitbox_collision
+  BEQ next
+  LDA #1
+  RTS
+next:
+  DEX
+  BPL loop
+  LDA #$00
+  RTS
+.endproc
+
 .proc physics_update
   LDA game_state
   CMP #game_states::playing
@@ -802,49 +919,59 @@ sprites:
 .include "../assets/metasprites.s"
 
 anim_sprites_l:
-  ; robot, idle
+  ; 00: robot, idle
   .byte <metasprite_0_data
   .byte <metasprite_1_data
   .byte <metasprite_0_data
   .byte <metasprite_1_data
-  ; robot, idle, flip
+  ; 00': robot, idle, flip
   .byte <metasprite_2_data
   .byte <metasprite_3_data
   .byte <metasprite_2_data
   .byte <metasprite_3_data
-  ; robot, walk
+  ; 01: robot, walk
   .byte <metasprite_0_data
   .byte <metasprite_4_data
   .byte <metasprite_5_data
   .byte <metasprite_6_data
-  ; robot, walk, flip
+  ; 01': robot, walk, flip
   .byte <metasprite_2_data
   .byte <metasprite_7_data
   .byte <metasprite_8_data
   .byte <metasprite_9_data
 
 anim_sprites_h:
-  ; robot, idle
+  ; 00: robot, idle
   .byte >metasprite_0_data
   .byte >metasprite_1_data
   .byte >metasprite_0_data
   .byte >metasprite_1_data
-  ; robot, idle, flip
+  ; 00': robot, idle, flip
   .byte >metasprite_2_data
   .byte >metasprite_3_data
   .byte >metasprite_2_data
   .byte >metasprite_3_data
-  ; robot, walk
+  ; 01: robot, walk
   .byte >metasprite_0_data
   .byte >metasprite_4_data
   .byte >metasprite_5_data
   .byte >metasprite_6_data
-  ; robot, walk, flip
+  ; 01': robot, walk, flip
   .byte >metasprite_2_data
   .byte >metasprite_7_data
   .byte >metasprite_8_data
   .byte >metasprite_9_data
 
+; hitboxes per anim sprite type
+
+sprite_hitbox_x1:
+  .byte $00, $00
+sprite_hitbox_y1:
+  .byte $00, $00
+sprite_hitbox_x2:
+  .byte $0f, $0f
+sprite_hitbox_y2:
+  .byte $0f, $0f
 
 left_nametable_for_level_l:
   .byte <(nametable_level_demo_left)
