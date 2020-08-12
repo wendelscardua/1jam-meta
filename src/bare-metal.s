@@ -866,7 +866,31 @@ next:
   ; TODO - add special case for robot (Y = 0)
   JSR handle_object_wall_collision
   BEQ @next
-  JMP @loop
+
+@fixup:
+  CLC
+  LDA object_sx, Y
+  ADC object_svx, Y
+  STA object_sx, Y
+  LDA object_x, Y
+  ADC object_vx, Y
+  STA object_x, Y
+
+  CLC
+  LDA object_sy, Y
+  ADC object_svy, Y
+  STA object_sy, Y
+  LDA object_y, Y
+  ADC object_vy, Y
+  STA object_y, Y
+
+  JSR prepare_object_hitbox
+  JSR hitbox_collision
+  BEQ @next
+  JSR handle_object_wall_collision
+  BEQ @next
+  JMP @fixup
+
 
 @next:
   INY
@@ -1136,11 +1160,15 @@ level_data_pointers_h:
 level_0_data:
   .byte $30, $a0
   ; walls
-  .byte 4
+  .byte 12
   .byte $00, $00, $08, $ff
   .byte $f8, $00, $ff, $ff
   .byte $00, $e0, $ff, $ff
   .byte $00, $00, $ff, $08
+  ; collision performance testing
+  .repeat 8
+  .byte $00, $00, $ff, $08
+  .endrepeat
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
