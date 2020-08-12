@@ -1136,9 +1136,11 @@ level_data_pointers_h:
 level_0_data:
   .byte $30, $a0
   ; walls
-  .byte 2
+  .byte 4
   .byte $00, $00, $08, $ff
   .byte $f8, $00, $ff, $ff
+  .byte $00, $e0, $ff, $ff
+  .byte $00, $00, $ff, $08
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
