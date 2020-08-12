@@ -149,6 +149,11 @@ debug_x: .res 1
 debug_y: .res 1
 debug_a: .res 1
 
+backup_object_x: .res 1
+backup_object_sx: .res 1
+backup_object_y: .res 1
+backup_object_sy: .res 1
+
 .segment "BSS"
 ; non-zp RAM goes here
 
@@ -845,17 +850,21 @@ next:
   ; (x:sx, y:sy) += (vx:svx, vy:svy)
   CLC
   LDA object_sx, Y
+  STA backup_object_sx
   ADC object_svx, Y
   STA object_sx, Y
   LDA object_x, Y
+  STA backup_object_x
   ADC object_vx, Y
   STA object_x, Y
 
   CLC
   LDA object_sy, Y
+  STA backup_object_sy
   ADC object_svy, Y
   STA object_sy, Y
   LDA object_y, Y
+  STA backup_object_y
   ADC object_vy, Y
   STA object_y, Y
 
@@ -909,19 +918,13 @@ next:
   ; else returns Z = 0 (needs to replay movement at reduced speed)
 
   ; rollback movement
-  SEC
-  LDA object_sx, Y
-  SBC object_svx, Y
+  LDA backup_object_sx
   STA object_sx, Y
-  LDA object_x, Y
-  SBC object_vx, Y
+  LDA backup_object_x
   STA object_x, Y
-  SEC
-  LDA object_sy, Y
-  SBC object_svy, Y
+  LDA backup_object_sy
   STA object_sy, Y
-  LDA object_y, Y
-  SBC object_vy, Y
+  LDA backup_object_y
   STA object_y, Y
 
   ; halve speed
