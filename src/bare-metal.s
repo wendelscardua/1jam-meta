@@ -810,24 +810,76 @@ etc:
   RTS
 .endproc
 
+.proc check_X_wall_collision
+  CLC
+  LDA hitbox_a+Box::x2
+  CMP wall_x1, X
+  BCS :+
+  LDA #0
+  RTS
+:
+  CLC
+  LDA wall_x2, X
+  CMP hitbox_a+Box::x1
+  BCS :+
+  LDA #0
+  RTS
+:
+
+  CLC
+  LDA hitbox_a+Box::y2
+  CMP wall_y1, X
+  BCS :+
+  LDA #0
+  RTS
+:
+
+  CLC
+  LDA wall_y2, X
+  CMP hitbox_a+Box::y1
+  BCS :+
+  LDA #0
+  RTS
+:
+  LDA #$01
+  RTS
+.endproc
+
 .proc check_wall_collision
   ; returns 1 in A if hitbox_a intersects with any wall
   LDA #0
   LDX walls_length
   DEX
 loop:
-  LDA wall_x1, X
-  STA hitbox_b+Box::x1
-  LDA wall_y1, X
-  STA hitbox_b+Box::y1
+  CLC
+  LDA hitbox_a+Box::x2
+  CMP wall_x1, X
+  BCS :+
+  JMP next
+:
+  CLC
   LDA wall_x2, X
-  STA hitbox_b+Box::x2
+  CMP hitbox_a+Box::x1
+  BCS :+
+  JMP next
+:
+
+  CLC
+  LDA hitbox_a+Box::y2
+  CMP wall_y1, X
+  BCS :+
+  JMP next
+:
+
+  CLC
   LDA wall_y2, X
-  STA hitbox_b+Box::y2
-  JSR hitbox_collision
-  BEQ next
-  LDA #1
+  CMP hitbox_a+Box::y1
+  BCS :+
+  JMP next
+:
+  LDA #$01
   RTS
+
 next:
   DEX
   BPL loop
@@ -847,6 +899,18 @@ next:
   AND #OBJ_MOVE_FLAG
   BEQ @next
 
+  JSR physics_update_single_object
+@next:
+  INY
+  CPY objects_length
+  BNE @loop
+
+  JSR update_scroll
+
+  RTS
+.endproc
+
+.proc physics_update_single_object
   ; (x:sx, y:sy) += (vx:svx, vy:svy)
   CLC
   LDA object_sx, Y
@@ -870,52 +934,44 @@ next:
 
   JSR prepare_object_hitbox
   JSR check_wall_collision
-  BEQ @next
+  BNE :+
+  RTS
+:
   ; debugOut {"VX: ", fHex8(object_vx), fHex8(object_svx), " VY: ", fHex8(object_vy), fHex8(object_svy), ". "}
   ; TODO - add special case for robot (Y = 0)
   JSR handle_object_wall_collision
-  BEQ @next
+  BNE :+
+  RTS
+:
 
 @fixup:
   CLC
-  LDA object_sx, Y
+  LDA backup_object_sx
   ADC object_svx, Y
   STA object_sx, Y
-  LDA object_x, Y
+  LDA backup_object_x
   ADC object_vx, Y
   STA object_x, Y
 
   CLC
-  LDA object_sy, Y
+  LDA backup_object_sy
   ADC object_svy, Y
   STA object_sy, Y
-  LDA object_y, Y
+  LDA backup_object_y
   ADC object_vy, Y
   STA object_y, Y
 
+  TXA
+  PHA
   JSR prepare_object_hitbox
-  JSR hitbox_collision
-  BEQ @next
-  JSR handle_object_wall_collision
-  BEQ @next
-  JMP @fixup
-
-
-@next:
-  INY
-  CPY objects_length
-  BNE @loop
-
-  JSR update_scroll
-
+  PLA
+  TAX
+  JSR check_X_wall_collision
+  BNE :+
   RTS
-.endproc
-
-.proc handle_object_wall_collision
-  ; handle collision between Y-index object and X-index wall
-  ; rewinds movement, reduces speed
-  ; if resulting speed = 0, returns Z = 1 (meaning leave object here)
-  ; else returns Z = 0 (needs to replay movement at reduced speed)
+:
+  JSR handle_object_wall_collision
+  BNE @fixup
 
   ; rollback movement
   LDA backup_object_sx
@@ -926,6 +982,15 @@ next:
   STA object_sy, Y
   LDA backup_object_y
   STA object_y, Y
+
+  RTS
+.endproc
+
+.proc handle_object_wall_collision
+  ; handle collision between Y-index object and X-index wall
+  ; rewinds movement, reduces speed
+  ; if resulting speed = 0, returns Z = 1 (meaning leave object here)
+  ; else returns Z = 0 (needs to replay movement at reduced speed)
 
   ; halve speed
   ; XXX - can't use Y for inc
