@@ -811,37 +811,23 @@ etc:
 .endproc
 
 .proc check_X_wall_collision
-  CLC
   LDA hitbox_a+Box::x2
   CMP wall_x1, X
-  BCS :+
-  LDA #0
-  RTS
-:
-  CLC
+  BCC no_collision
   LDA wall_x2, X
   CMP hitbox_a+Box::x1
-  BCS :+
-  LDA #0
-  RTS
-:
-
-  CLC
+  BCC no_collision
   LDA hitbox_a+Box::y2
   CMP wall_y1, X
-  BCS :+
-  LDA #0
-  RTS
-:
-
-  CLC
+  BCC no_collision
   LDA wall_y2, X
   CMP hitbox_a+Box::y1
-  BCS :+
-  LDA #0
-  RTS
-:
+  BCC no_collision
+
   LDA #$01
+  RTS
+no_collision:
+  LDA #$00
   RTS
 .endproc
 
@@ -851,32 +837,22 @@ etc:
   LDX walls_length
   DEX
 loop:
-  CLC
   LDA hitbox_a+Box::x2
   CMP wall_x1, X
-  BCS :+
-  JMP next
-:
-  CLC
+  BCC next
+
   LDA wall_x2, X
   CMP hitbox_a+Box::x1
-  BCS :+
-  JMP next
-:
+  BCC next
 
-  CLC
   LDA hitbox_a+Box::y2
   CMP wall_y1, X
-  BCS :+
-  JMP next
-:
+  BCC next
 
-  CLC
   LDA wall_y2, X
   CMP hitbox_a+Box::y1
-  BCS :+
-  JMP next
-:
+  BCC next
+
   LDA #$01
   RTS
 
