@@ -181,13 +181,6 @@ object_flags: .res MAX_OBJECTS
 OBJ_ANIM_MASK = %00111111
 OBJ_MOVE_FLAG = %01000000
 
-MAX_WALLS = 12
-walls_length: .res 1
-wall_x1: .res MAX_WALLS
-wall_y1: .res MAX_WALLS
-wall_x2: .res MAX_WALLS
-wall_y2: .res MAX_WALLS
-
 .segment "CODE"
 
 .import reset_handler
@@ -813,59 +806,6 @@ etc:
   RTS
 .endproc
 
-.proc check_Y_wall_collision
-  LDA hitbox_a+Box::x2
-  CMP wall_x1, Y
-  BCC no_collision
-  LDA wall_x2, Y
-  CMP hitbox_a+Box::x1
-  BCC no_collision
-  LDA hitbox_a+Box::y2
-  CMP wall_y1, Y
-  BCC no_collision
-  LDA wall_y2, Y
-  CMP hitbox_a+Box::y1
-  BCC no_collision
-
-  LDA #$01
-  RTS
-no_collision:
-  LDA #$00
-  RTS
-.endproc
-
-.proc check_wall_collision
-  ; returns 1 in A if hitbox_a intersects with any wall
-  LDA #0
-  LDY walls_length
-  DEY
-loop:
-  LDA hitbox_a+Box::x2
-  CMP wall_x1, Y
-  BCC next
-
-  LDA wall_x2, Y
-  CMP hitbox_a+Box::x1
-  BCC next
-
-  LDA hitbox_a+Box::y2
-  CMP wall_y1, Y
-  BCC next
-
-  LDA wall_y2, Y
-  CMP hitbox_a+Box::y1
-  BCC next
-
-  LDA #$01
-  RTS
-
-next:
-  DEY
-  BPL loop
-  LDA #$00
-  RTS
-.endproc
-
 .proc physics_update
   LDA game_state
   CMP #game_states::playing
@@ -890,131 +830,6 @@ next:
 .endproc
 
 .proc physics_update_single_object
-  ; (x:sx, y:sy) += (vx:svx, vy:svy)
-  CLC
-  LDA object_sx, X
-  STA backup_object_sx
-  ADC object_svx, X
-  STA object_sx, X
-  LDA object_x, X
-  STA backup_object_x
-  ADC object_vx, X
-  STA object_x, X
-
-  CLC
-  LDA object_sy, X
-  STA backup_object_sy
-  ADC object_svy, X
-  STA object_sy, X
-  LDA object_y, X
-  STA backup_object_y
-  ADC object_vy, X
-  STA object_y, X
-
-  JSR prepare_object_hitbox
-  JSR check_wall_collision
-  BNE :+
-  RTS
-:
-  ; debugOut {"VX: ", fHex8(object_vx), fHex8(object_svx), " VY: ", fHex8(object_vy), fHex8(object_svy), ". "}
-  ; TODO - add special case for robot (X = 0)
-  JSR handle_object_wall_collision
-  BNE :+
-  RTS
-:
-
-@fixup:
-  CLC
-  LDA backup_object_sx
-  ADC object_svx, X
-  STA object_sx, X
-  LDA backup_object_x
-  ADC object_vx, X
-  STA object_x, X
-
-  CLC
-  LDA backup_object_sy
-  ADC object_svy, X
-  STA object_sy, X
-  LDA backup_object_y
-  ADC object_vy, X
-  STA object_y, X
-
-  JSR prepare_object_hitbox
-  JSR check_Y_wall_collision
-  BNE :+
-  RTS
-:
-  JSR handle_object_wall_collision
-  BNE @fixup
-
-  ; rollback movement
-  LDA backup_object_sx
-  STA object_sx, X
-  LDA backup_object_x
-  STA object_x, X
-  LDA backup_object_sy
-  STA object_sy, X
-  LDA backup_object_y
-  STA object_y, X
-
-  RTS
-.endproc
-
-.proc handle_object_wall_collision
-  ; handle collision between X-index object and Y-index wall
-  ; rewinds movement, reduces speed
-  ; if resulting speed = 0, returns Z = 1 (meaning leave object here)
-  ; else returns Z = 0 (needs to replay movement at reduced speed)
-
-  ; halve speed
-
-  ; if odd negative, inc
-  LDA object_vx, X
-  BPL :+
-  INC object_svx, X
-  BNE :+
-  INC object_vx, X
-:
-
-  LDA object_vy, X
-  BPL :+
-  INC object_svy, X
-  BNE :+
-  INC object_vy, X
-:
-
-
-  CLC
-  LDA object_vx, X
-  BPL :+
-  SEC
-:
-  ROR object_vx, X
-  ROR object_svx, X
-
-  CLC
-  LDA object_vy, X
-  BPL :+
-  SEC
-:
-  ROR object_vy, X
-  ROR object_svy, X
-
-  ; check if stopped (i.e. both speeds are zero)
-  LDA object_vx, X
-  BEQ :+
-  RTS
-:
-  LDA object_svx, X
-  BEQ :+
-  RTS
-:
-  LDA object_vy, X
-  BEQ :+
-  RTS
-:
-  LDA object_svy, X
   RTS
 .endproc
 
