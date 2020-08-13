@@ -115,6 +115,7 @@ oam_sprites:
 ; zp vars
 addr_ptr: .res 2 ; generic address pointer
 ppu_addr_ptr: .res 2 ; temporary address for PPU_ADDR
+bg_matrix_ptr: .res 2 ; address to current bg matrix
 
 temp_x: .res 1
 temp_sx: .res 1
@@ -439,35 +440,11 @@ etc:
 
   SCREEN_OFF
 
-  ; load left/right nametables
-  LDX current_level
-
-  LDA PPUSTATUS
-  LDA #$20
-  STA PPUADDR
-  LDA #$00
-  STA PPUADDR
-
-  LDA left_nametable_for_level_l, X
-  STA rle_ptr
-  LDA left_nametable_for_level_h, X
-  STA rle_ptr+1
-  JSR unrle
-
-  LDA #$24
-  STA PPUADDR
-  LDA #$00
-  STA PPUADDR
-
-  LDA right_nametable_for_level_l, X
-  STA rle_ptr
-  LDA right_nametable_for_level_h, X
-  STA rle_ptr+1
-  JSR unrle
-
   LDA #$00
   STA scroll_x
   STA scroll_sx
+
+  LDX current_level
 
   LDA level_data_pointers_l, X
   STA addr_ptr
@@ -475,10 +452,42 @@ etc:
   STA addr_ptr+1
 
   LDY #0 ; Y iterates over level data
-  LDX #0
 
+  ; read and load nametables
+
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  LDA (addr_ptr), Y
+  INY
+  STA rle_ptr
+  LDA (addr_ptr), Y
+  INY
+  STA rle_ptr+1
+  save_regs
+  JSR unrle
+  restore_regs
+
+  LDA #$24
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  LDA (addr_ptr), Y
+  INY
+  STA rle_ptr
+  LDA (addr_ptr), Y
+  INY
+  STA rle_ptr+1
+  save_regs
+  JSR unrle
+  restore_regs
+
+  LDX #0
   ; add robot (robot is always the first object)
-  ; TODO read from level data
 
   LDA (addr_ptr), Y ; read robot x
   INY
@@ -502,26 +511,14 @@ etc:
 
   STX objects_length
 
-  LDA (addr_ptr), Y ; read number of walls
-  INY
-  STA walls_length
-  LDX #0
-@wall_loop:
+  ; read bg matrix pointer
   LDA (addr_ptr), Y
   INY
-  STA wall_x1, X
+  STA bg_matrix_ptr
+
   LDA (addr_ptr), Y
   INY
-  STA wall_y1, X
-  LDA (addr_ptr), Y
-  INY
-  STA wall_x2, X
-  LDA (addr_ptr), Y
-  INY
-  STA wall_y2, X
-  INX
-  CPX walls_length
-  BNE @wall_loop
+  STA bg_matrix_ptr+1
 
   VBLANK
 
@@ -1174,45 +1171,46 @@ sprite_hitbox_x2:
 sprite_hitbox_y2:
   .byte $0f, $0f
 
-left_nametable_for_level_l:
-  .byte <(nametable_level_demo_left)
-left_nametable_for_level_h:
-  .byte >(nametable_level_demo_left)
-
-right_nametable_for_level_l:
-  .byte <(nametable_level_demo_right)
-right_nametable_for_level_h:
-  .byte >(nametable_level_demo_right)
-
 level_data_pointers_l:
   .byte <(level_0_data)
 level_data_pointers_h:
   .byte >(level_0_data)
 
-; level data format
+; level data format:
+; left and right nametable pointers
 ; robot x, robot y (assume subx = 0)
-; number of walls
-; (for each wall) x1 y1 x2 y2
-
+; bg matrix pointer
 
 level_0_data:
-  .byte $30, $a0
-  ; walls
-  .byte 12
-  .byte $00, $00, $08, $ff
-  .byte $f8, $00, $ff, $ff
-  .byte $00, $e0, $ff, $ff
-  .byte $00, $00, $ff, $08
-  ; collision performance testing
-  .repeat 8
-  .byte $00, $00, $ff, $08
-  .endrepeat
+  .word level_0_left_nametable
+  .word level_0_right_nametable
+  .byte $30, $c0
+  .word level_0_bg_matrix
+
+level_0_left_nametable: .incbin "../assets/nametables/level-00-left.rle"
+level_0_right_nametable: .incbin "../assets/nametables/level-00-right.rle"
+
+level_0_bg_matrix:
+  .byte %1111111, %11111111, %11111111, %11111111
+  .byte %1000000, %00000000, %00000000, %00000001
+  .byte %1000000, %00000000, %00000000, %00000001
+  .byte %1000000, %00000000, %00000000, %00000001
+  .byte %1000000, %00000000, %00000000, %00000001
+  .byte %1000000, %00000000, %00001110, %00000001
+  .byte %1000000, %00000000, %11000000, %00000001
+  .byte %1000000, %00000000, %11000001, %11111001
+  .byte %1000000, %00000000, %00000000, %00000011
+  .byte %1000000, %00000000, %00000000, %00000001
+  .byte %1000000, %00000000, %00000000, %00000101
+  .byte %1000001, %11110000, %00000000, %00000001
+  .byte %1000000, %00000000, %00000000, %00000001
+  .byte %1000000, %00000100, %00000000, %01111001
+  .byte %1000000, %00000000, %00000011, %11000001
+  .byte %1111111, %11111111, %11111111, %11111111
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
 nametable_game_over: .incbin "../assets/nametables/game_over.rle"
-nametable_level_demo_left: .incbin "../assets/nametables/template-double-level-left.rle"
-nametable_level_demo_right: .incbin "../assets/nametables/template-double-level-right.rle"
 
 .segment "CHR"
 .incbin "../assets/chr/main-bg-2k-1.chr"
