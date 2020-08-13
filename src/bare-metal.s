@@ -830,6 +830,14 @@ etc:
 .endproc
 
 .proc physics_update_single_object
+  ; compute movement for X-index object, handling collision
+
+  ; horizontal movement
+  CLC
+  LDA object_sx, Y
+  ADC object_vsx, Y
+  STA object_sx, Y
+
   RTS
 .endproc
 
