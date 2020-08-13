@@ -737,31 +737,37 @@ etc:
 
 .proc prepare_object_hitbox
   ; fills hitbox buffer with current (indexed by Y) object hitbox
-  ; cobbles X, A
-  LDA object_flags, Y
+  ; cobbles A
+  TYA
+  PHA
+
+  LDA object_flags, X
   AND #OBJ_ANIM_MASK
   LSR
-  TAX
+  TAY
 
   CLC
-  LDA sprite_hitbox_x1, X
-  ADC object_x, Y
+  LDA sprite_hitbox_x1, Y
+  ADC object_x, X
   STA hitbox_a+Box::x1
 
   CLC
-  LDA sprite_hitbox_y1, X
-  ADC object_y, Y
+  LDA sprite_hitbox_y1, Y
+  ADC object_y, X
   STA hitbox_a+Box::y1
 
   CLC
-  LDA sprite_hitbox_x2, X
-  ADC object_x, Y
+  LDA sprite_hitbox_x2, Y
+  ADC object_x, X
   STA hitbox_a+Box::x2
 
   CLC
-  LDA sprite_hitbox_y2, X
-  ADC object_y, Y
+  LDA sprite_hitbox_y2, Y
+  ADC object_y, X
   STA hitbox_a+Box::y2
+
+  PLA
+  TAY
   RTS
 .endproc
 
@@ -810,17 +816,17 @@ etc:
   RTS
 .endproc
 
-.proc check_X_wall_collision
+.proc check_Y_wall_collision
   LDA hitbox_a+Box::x2
-  CMP wall_x1, X
+  CMP wall_x1, Y
   BCC no_collision
-  LDA wall_x2, X
+  LDA wall_x2, Y
   CMP hitbox_a+Box::x1
   BCC no_collision
   LDA hitbox_a+Box::y2
-  CMP wall_y1, X
+  CMP wall_y1, Y
   BCC no_collision
-  LDA wall_y2, X
+  LDA wall_y2, Y
   CMP hitbox_a+Box::y1
   BCC no_collision
 
@@ -834,22 +840,22 @@ no_collision:
 .proc check_wall_collision
   ; returns 1 in A if hitbox_a intersects with any wall
   LDA #0
-  LDX walls_length
-  DEX
+  LDY walls_length
+  DEY
 loop:
   LDA hitbox_a+Box::x2
-  CMP wall_x1, X
+  CMP wall_x1, Y
   BCC next
 
-  LDA wall_x2, X
+  LDA wall_x2, Y
   CMP hitbox_a+Box::x1
   BCC next
 
   LDA hitbox_a+Box::y2
-  CMP wall_y1, X
+  CMP wall_y1, Y
   BCC next
 
-  LDA wall_y2, X
+  LDA wall_y2, Y
   CMP hitbox_a+Box::y1
   BCC next
 
@@ -857,7 +863,7 @@ loop:
   RTS
 
 next:
-  DEX
+  DEY
   BPL loop
   LDA #$00
   RTS
@@ -869,16 +875,16 @@ next:
   BEQ :+
   RTS
 :
-  LDY #0
+  LDX #0
 @loop:
-  LDA object_flags, Y
+  LDA object_flags, X
   AND #OBJ_MOVE_FLAG
   BEQ @next
 
   JSR physics_update_single_object
 @next:
-  INY
-  CPY objects_length
+  INX
+  CPX objects_length
   BNE @loop
 
   JSR update_scroll
@@ -889,24 +895,24 @@ next:
 .proc physics_update_single_object
   ; (x:sx, y:sy) += (vx:svx, vy:svy)
   CLC
-  LDA object_sx, Y
+  LDA object_sx, X
   STA backup_object_sx
-  ADC object_svx, Y
-  STA object_sx, Y
-  LDA object_x, Y
+  ADC object_svx, X
+  STA object_sx, X
+  LDA object_x, X
   STA backup_object_x
-  ADC object_vx, Y
-  STA object_x, Y
+  ADC object_vx, X
+  STA object_x, X
 
   CLC
-  LDA object_sy, Y
+  LDA object_sy, X
   STA backup_object_sy
-  ADC object_svy, Y
-  STA object_sy, Y
-  LDA object_y, Y
+  ADC object_svy, X
+  STA object_sy, X
+  LDA object_y, X
   STA backup_object_y
-  ADC object_vy, Y
-  STA object_y, Y
+  ADC object_vy, X
+  STA object_y, X
 
   JSR prepare_object_hitbox
   JSR check_wall_collision
@@ -914,7 +920,7 @@ next:
   RTS
 :
   ; debugOut {"VX: ", fHex8(object_vx), fHex8(object_svx), " VY: ", fHex8(object_vy), fHex8(object_svy), ". "}
-  ; TODO - add special case for robot (Y = 0)
+  ; TODO - add special case for robot (X = 0)
   JSR handle_object_wall_collision
   BNE :+
   RTS
@@ -923,26 +929,22 @@ next:
 @fixup:
   CLC
   LDA backup_object_sx
-  ADC object_svx, Y
-  STA object_sx, Y
+  ADC object_svx, X
+  STA object_sx, X
   LDA backup_object_x
-  ADC object_vx, Y
-  STA object_x, Y
+  ADC object_vx, X
+  STA object_x, X
 
   CLC
   LDA backup_object_sy
-  ADC object_svy, Y
-  STA object_sy, Y
+  ADC object_svy, X
+  STA object_sy, X
   LDA backup_object_y
-  ADC object_vy, Y
-  STA object_y, Y
+  ADC object_vy, X
+  STA object_y, X
 
-  TXA
-  PHA
   JSR prepare_object_hitbox
-  PLA
-  TAX
-  JSR check_X_wall_collision
+  JSR check_Y_wall_collision
   BNE :+
   RTS
 :
@@ -951,29 +953,24 @@ next:
 
   ; rollback movement
   LDA backup_object_sx
-  STA object_sx, Y
+  STA object_sx, X
   LDA backup_object_x
-  STA object_x, Y
+  STA object_x, X
   LDA backup_object_sy
-  STA object_sy, Y
+  STA object_sy, X
   LDA backup_object_y
-  STA object_y, Y
+  STA object_y, X
 
   RTS
 .endproc
 
 .proc handle_object_wall_collision
-  ; handle collision between Y-index object and X-index wall
+  ; handle collision between X-index object and Y-index wall
   ; rewinds movement, reduces speed
   ; if resulting speed = 0, returns Z = 1 (meaning leave object here)
   ; else returns Z = 0 (needs to replay movement at reduced speed)
 
   ; halve speed
-  ; XXX - can't use Y for inc
-  TXA
-  PHA
-  TYA
-  TAX
 
   ; if odd negative, inc
   LDA object_vx, X
@@ -1007,23 +1004,20 @@ next:
   ROR object_vy, X
   ROR object_svy, X
 
-  PLA
-  TAX
-
   ; check if stopped (i.e. both speeds are zero)
-  LDA object_vx, Y
+  LDA object_vx, X
   BEQ :+
   RTS
 :
-  LDA object_svx, Y
+  LDA object_svx, X
   BEQ :+
   RTS
 :
-  LDA object_vy, Y
+  LDA object_vy, X
   BEQ :+
   RTS
 :
-  LDA object_svy, Y
+  LDA object_svy, X
   RTS
 .endproc
 
