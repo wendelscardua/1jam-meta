@@ -124,8 +124,10 @@ temp_sy: .res 1
 
 .struct Box
   x1 .byte
+  sx1 .byte
   y1 .byte
   x2 .byte
+  sx2 .byte
   y2 .byte
 .endstruct
 
@@ -737,6 +739,9 @@ etc:
   TAY
 
   CLC
+  LDA sprite_hitbox_sx1, Y
+  ADC object_sx, X
+  STA hitbox_a+Box::sx1
   LDA sprite_hitbox_x1, Y
   ADC object_x, X
   STA hitbox_a+Box::x1
@@ -747,6 +752,9 @@ etc:
   STA hitbox_a+Box::y1
 
   CLC
+  LDA sprite_hitbox_sx2, Y
+  ADC object_sx, X
+  STA hitbox_a+Box::sx2
   LDA sprite_hitbox_x2, Y
   ADC object_x, X
   STA hitbox_a+Box::x2
@@ -775,6 +783,10 @@ etc:
   CLC
   LDA hitbox_a+Box::x2
   CMP hitbox_b+Box::x1
+  BNE :+
+  LDA hitbox_a+Box::sx2
+  CMP hitbox_b+Box::sx1
+:
   BCS :+
   LDA #$00
   RTS
@@ -782,6 +794,10 @@ etc:
   CLC
   LDA hitbox_b+Box::x2
   CMP hitbox_a+Box::x1
+  BNE :+
+  LDA hitbox_b+Box::sx2
+  CMP hitbox_a+Box::sx1
+:
   BCS :+
   LDA #$00
   RTS
@@ -817,8 +833,9 @@ etc:
   LDA object_flags, X
   AND #OBJ_MOVE_FLAG
   BEQ @next
-
-  JSR physics_update_single_object
+  
+  JSR physics_update_single_object_horizontal
+  ; JSR physics_update_single_object_vertical
 @next:
   INX
   CPX objects_length
@@ -829,15 +846,193 @@ etc:
   RTS
 .endproc
 
-.proc physics_update_single_object
+.proc physics_update_single_object_horizontal
   ; compute movement for X-index object, handling collision
 
   ; horizontal movement
   CLC
-  LDA object_sx, Y
-  ADC object_vsx, Y
-  STA object_sx, Y
+  LDA object_sx, X
+  STA backup_object_sx
+  ADC object_svx, X
+  STA object_sx, X
+  LDA object_x, X
+  STA backup_object_x
+  ADC object_vx, X
+  STA object_x, X
+  ; skip collision if real position didn't change
+  CMP backup_object_x
+  BNE :+
+  LDA object_sx, X
+  EOR backup_object_sx
+  AND #%10000000
+  BNE :+
+  RTS
+:
 
+  LDA object_x, X
+  CMP backup_object_x
+  BCC negative_direction
+  BNE positive_direction
+  LDA object_sx, X
+  CMP backup_object_sx
+  BCC negative_direction
+
+positive_direction:
+
+  LDA object_flags, X
+  AND #OBJ_ANIM_MASK
+  LSR
+  TAY
+
+  CLC
+  LDA sprite_hitbox_sx2, Y
+  ADC object_sx, X
+  STA temp_sx
+  LDA sprite_hitbox_x2, Y
+  ADC object_x, X
+  STA temp_x
+
+  CLC
+  LDA sprite_hitbox_y1, Y
+  ADC object_y, X
+  STA temp_y
+
+  JSR bg_matrix_collision
+  BNE rollback
+
+  CLC
+  LDA sprite_hitbox_sx2, Y
+  ADC object_sx, X
+  STA temp_sx
+  LDA sprite_hitbox_x2, Y
+  ADC object_x, X
+  STA temp_x
+
+  CLC
+  LDA sprite_hitbox_y2, Y
+  ADC object_y, X
+  STA temp_y
+
+  JSR bg_matrix_collision
+  BNE rollback
+  RTS
+
+negative_direction:
+
+  LDA object_flags, X
+  AND #OBJ_ANIM_MASK
+  LSR
+  TAY
+
+  CLC
+  LDA sprite_hitbox_sx1, Y
+  ADC object_sx, X
+  STA temp_sx
+  LDA sprite_hitbox_x1, Y
+  ADC object_x, X
+  STA temp_x
+
+  CLC
+  LDA sprite_hitbox_y1, Y
+  ADC object_y, X
+  STA temp_y
+
+  JSR bg_matrix_collision
+  BNE rollback
+
+  CLC
+  LDA sprite_hitbox_sx1, Y
+  ADC object_sx, X
+  STA temp_sx
+  LDA sprite_hitbox_x1, Y
+  ADC object_x, X
+  STA temp_x
+
+  CLC
+  LDA sprite_hitbox_y2, Y
+  ADC object_y, X
+  STA temp_y
+
+  JSR bg_matrix_collision
+  BNE rollback
+  RTS
+
+rollback:
+  LDA backup_object_x
+  STA object_x, X
+  LDA backup_object_sx
+  STA object_sx, X
+  RTS
+.endproc
+
+.proc bg_matrix_collision
+  ; check if temp_x, temp_y corresponds to a solid block in bg matrix
+
+  save_regs
+
+  ; byte coordinate:
+  ; 4 * (y / 2^4) + (x' / 2^7)
+  ;                 (x / 2^6)
+  ; bit coordinate:
+  ; (x' / 2^4) % 2^3
+  ; (x / 2^3) % 2^3
+
+  ; y part
+  ; abcdefgh
+  ; 0000abcd
+  ; 00abcd00
+  LSR temp_y
+  LSR temp_y
+  LDA temp_y
+  AND #%00111100
+  STA temp_y
+
+  ; x part => temp_x
+  ; abcdefgh
+  ; 000000ab
+
+  ; x bit part => temp_sx
+  ; abcdefgh
+  ; 00000cde
+
+  ROL temp_x ; a | bcd... 
+  ROL temp_x ; b | cde...a
+  ROL temp_x ; c | de...ab
+
+  LDA temp_x
+  STA temp_sx ; c | de...ab
+  ROL temp_sx ; d | e.....c
+  ROL temp_sx ; e | f....cd
+  ROL temp_sx ; f | ....cde
+
+  LDA temp_x
+  AND #%11
+  CLC
+  ADC temp_y
+  STA temp_x
+  TAY
+
+  LDA (bg_matrix_ptr), Y
+  STA temp_x
+
+  LDA temp_sx
+  AND #%111
+  STA temp_sx
+
+@loop:
+  BMI @exit
+  ROL temp_x
+  DEC temp_sx
+  LDA temp_sx
+  JMP @loop
+@exit:
+  BCS @collision
+  restore_regs
+  LDA #0
+  RTS
+@collision:
+  restore_regs
+  LDA #1
   RTS
 .endproc
 
@@ -986,11 +1181,15 @@ anim_sprites_h:
 ; hitboxes per anim sprite type
 
 sprite_hitbox_x1:
-  .byte $01, $01
+  .byte $00, $00
+sprite_hitbox_sx1:
+  .byte $00, $00
 sprite_hitbox_y1:
   .byte $00, $00
 sprite_hitbox_x2:
   .byte $07, $07
+sprite_hitbox_sx2:
+  .byte $80, $80
 sprite_hitbox_y2:
   .byte $0f, $0f
 
@@ -1014,22 +1213,21 @@ level_0_left_nametable: .incbin "../assets/nametables/level-00-left.rle"
 level_0_right_nametable: .incbin "../assets/nametables/level-00-right.rle"
 
 level_0_bg_matrix:
-  .byte %1111111, %11111111, %11111111, %11111111
-  .byte %1000000, %00000000, %00000000, %00000001
-  .byte %1000000, %00000000, %00000000, %00000001
-  .byte %1000000, %00000000, %00000000, %00000001
-  .byte %1000000, %00000000, %00000000, %00000001
-  .byte %1000000, %00000000, %00001110, %00000001
-  .byte %1000000, %00000000, %11000000, %00000001
-  .byte %1000000, %00000000, %11000001, %11111001
-  .byte %1000000, %00000000, %00000000, %00000011
-  .byte %1000000, %00000000, %00000000, %00000001
-  .byte %1000000, %00000000, %00000000, %00000101
-  .byte %1000001, %11110000, %00000000, %00000001
-  .byte %1000000, %00000000, %00000000, %00000001
-  .byte %1000000, %00000100, %00000000, %01111001
-  .byte %1000000, %00000000, %00000011, %11000001
-  .byte %1111111, %11111111, %11111111, %11111111
+  .byte %11111111, %11111111, %11111111, %11111111
+  .byte %10000000, %00000000, %00000000, %00000001
+  .byte %10000000, %00000000, %00000000, %00000001
+  .byte %10000000, %00000000, %00000000, %00000001
+  .byte %10000000, %00000000, %00000000, %00000001
+  .byte %10000000, %00000000, %00001110, %00000001
+  .byte %10000000, %00000000, %11000000, %00000001
+  .byte %10000000, %00000000, %11000001, %11111001
+  .byte %10000000, %00000000, %00000000, %00000011
+  .byte %10000000, %00000000, %00000000, %00000001
+  .byte %10000001, %11110000, %00000000, %00000101
+  .byte %10000000, %00000000, %00000000, %00000001
+  .byte %10000000, %00000100, %00000000, %01111001
+  .byte %10000000, %00000000, %00000011, %11000001
+  .byte %11111111, %11111111, %11111111, %11111111
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
