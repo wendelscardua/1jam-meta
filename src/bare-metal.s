@@ -55,7 +55,7 @@ GRAVITY = $0040 ; 8.8
 JUMP_SPEED = $fb00 ; 8.8
 CONTROL_ACCELERATION = $0030
 MAX_HORIZONTAL_SPEED = $0400
-
+GROUND_SPEED_DECAY = $0020
 
 ; debug - macros for NintendulatorDX interaction
 .ifdef DEBUG
@@ -623,10 +623,10 @@ etc:
 
   CLC
   LDA object_svx
-  ADC #%11100000
+  ADC #<(-GROUND_SPEED_DECAY)
   STA object_svx
   LDA object_vx
-  ADC #%11111111
+  ADC #>(-GROUND_SPEED_DECAY)
   STA object_vx
   BPL @endspeed
   LDA #$0
@@ -645,10 +645,10 @@ etc:
   ; decay negative speed
   CLC
   LDA object_svx
-  ADC #%00100000
+  ADC #<GROUND_SPEED_DECAY
   STA object_svx
   LDA object_vx
-  ADC #%00000000
+  ADC #>GROUND_SPEED_DECAY
   STA object_vx
   BMI @endspeed
   LDA #$0
