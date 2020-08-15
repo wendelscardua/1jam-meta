@@ -692,7 +692,7 @@ ground_controls:
   STA object_flags
   LDA #%00000000
   STA object_svy
-  LDA #%11111100
+  LDA #%11111011
   STA object_vy
 :
   RTS
@@ -1011,7 +1011,7 @@ rollback:
   ; vertical movement
   ; G
   LDA object_svy, X
-  ADC #%00100000
+  ADC #%01000000
   STA object_svy, X
   LDA object_vy, X
   ADC #%00000000
