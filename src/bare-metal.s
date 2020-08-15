@@ -898,7 +898,7 @@ positive_direction:
   STA temp_y
 
   JSR bg_matrix_collision
-  BNE rollback
+  BNE slow_positive
 
   CLC
   LDA sprite_hitbox_sx2, Y
@@ -914,8 +914,15 @@ positive_direction:
   STA temp_y
 
   JSR bg_matrix_collision
-  BNE rollback
+  BNE slow_positive
   RTS
+
+slow_positive:
+  LDA #%00000000
+  STA object_vx, X
+  LDA #%00100000
+  STA object_svx, X
+  JMP rollback
 
 negative_direction:
 
@@ -938,7 +945,7 @@ negative_direction:
   STA temp_y
 
   JSR bg_matrix_collision
-  BNE rollback
+  BNE slow_negative
 
   CLC
   LDA sprite_hitbox_sx1, Y
@@ -954,8 +961,15 @@ negative_direction:
   STA temp_y
 
   JSR bg_matrix_collision
-  BNE rollback
+  BNE slow_negative
   RTS
+
+slow_negative:
+  LDA #%11111111
+  STA object_vx, X
+  LDA #%11100000
+  STA object_svx, X
+  ; JMP rollback
 
 rollback:
   LDA backup_object_x
