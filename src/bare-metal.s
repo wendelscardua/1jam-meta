@@ -128,6 +128,10 @@ temp_sx: .res 1
 temp_y: .res 1
 temp_sy: .res 1
 
+collision_x: .res 1
+collision_sx: .res 1
+collision_y: .res 1
+
 .struct Box
   x1 .byte
   sx1 .byte
@@ -930,15 +934,15 @@ positive_direction:
   CLC
   LDA sprite_hitbox_sx2, Y
   ADC object_sx, X
-  STA temp_sx
+  STA collision_sx
   LDA sprite_hitbox_x2, Y
   ADC object_x, X
-  STA temp_x
+  STA collision_x
 
   CLC
   LDA sprite_hitbox_y1, Y
   ADC object_y, X
-  STA temp_y
+  STA collision_y
 
   JSR bg_matrix_collision
   BNE slow_positive
@@ -946,15 +950,15 @@ positive_direction:
   CLC
   LDA sprite_hitbox_sx2, Y
   ADC object_sx, X
-  STA temp_sx
+  STA collision_sx
   LDA sprite_hitbox_x2, Y
   ADC object_x, X
-  STA temp_x
+  STA collision_x
 
   CLC
   LDA sprite_hitbox_y2, Y
   ADC object_y, X
-  STA temp_y
+  STA collision_y
 
   JSR bg_matrix_collision
   BNE slow_positive
@@ -977,15 +981,15 @@ negative_direction:
   CLC
   LDA sprite_hitbox_sx1, Y
   ADC object_sx, X
-  STA temp_sx
+  STA collision_sx
   LDA sprite_hitbox_x1, Y
   ADC object_x, X
-  STA temp_x
+  STA collision_x
 
   CLC
   LDA sprite_hitbox_y1, Y
   ADC object_y, X
-  STA temp_y
+  STA collision_y
 
   JSR bg_matrix_collision
   BNE slow_negative
@@ -993,15 +997,15 @@ negative_direction:
   CLC
   LDA sprite_hitbox_sx1, Y
   ADC object_sx, X
-  STA temp_sx
+  STA collision_sx
   LDA sprite_hitbox_x1, Y
   ADC object_x, X
-  STA temp_x
+  STA collision_x
 
   CLC
   LDA sprite_hitbox_y2, Y
   ADC object_y, X
-  STA temp_y
+  STA collision_y
 
   JSR bg_matrix_collision
   BNE slow_negative
@@ -1071,15 +1075,15 @@ positive_direction:
   CLC
   LDA sprite_hitbox_sx1, Y
   ADC object_sx, X
-  STA temp_sx
+  STA collision_sx
   LDA sprite_hitbox_x1, Y
   ADC object_x, X
-  STA temp_x
+  STA collision_x
 
   CLC
   LDA sprite_hitbox_y2, Y
   ADC object_y, X
-  STA temp_y
+  STA collision_y
 
   JSR bg_matrix_collision
   BNE slow_positive
@@ -1087,15 +1091,15 @@ positive_direction:
   CLC
   LDA sprite_hitbox_sx2, Y
   ADC object_sx, X
-  STA temp_sx
+  STA collision_sx
   LDA sprite_hitbox_x2, Y
   ADC object_x, X
-  STA temp_x
+  STA collision_x
 
   CLC
   LDA sprite_hitbox_y2, Y
   ADC object_y, X
-  STA temp_y
+  STA collision_y
 
   JSR bg_matrix_collision
   BNE slow_positive
@@ -1121,15 +1125,15 @@ negative_direction:
   CLC
   LDA sprite_hitbox_sx1, Y
   ADC object_sx, X
-  STA temp_sx
+  STA collision_sx
   LDA sprite_hitbox_x1, Y
   ADC object_x, X
-  STA temp_x
+  STA collision_x
 
   CLC
   LDA sprite_hitbox_y1, Y
   ADC object_y, X
-  STA temp_y
+  STA collision_y
 
   JSR bg_matrix_collision
   BNE slow_negative
@@ -1137,15 +1141,15 @@ negative_direction:
   CLC
   LDA sprite_hitbox_sx2, Y
   ADC object_sx, X
-  STA temp_sx
+  STA collision_sx
   LDA sprite_hitbox_x2, Y
   ADC object_x, X
-  STA temp_x
+  STA collision_x
 
   CLC
   LDA sprite_hitbox_y1, Y
   ADC object_y, X
-  STA temp_y
+  STA collision_y
 
   JSR bg_matrix_collision
   BNE slow_negative
@@ -1167,9 +1171,16 @@ rollback:
 .endproc
 
 .proc bg_matrix_collision
-  ; check if temp_x, temp_y corresponds to a solid block in bg matrix
+  ; check if collision_X, collision_Y corresponds to a solid block in bg matrix
 
   save_regs
+
+  LDA collision_x
+  STA temp_x
+  LDA collision_sx
+  STA temp_sx
+  LDA collision_y
+  STA temp_y
 
   ; byte coordinate:
   ; 4 * (y / 2^4) + (x' / 2^7)
