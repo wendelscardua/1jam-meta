@@ -910,8 +910,7 @@ air_controls:
   CMP backup_object_x
   BNE :+
   LDA object_sx, X
-  EOR backup_object_sx
-  AND #%10000000
+  CMP backup_object_sx
   BNE :+
   RTS
 :
@@ -945,15 +944,7 @@ positive_direction:
   STA collision_y
 
   JSR bg_matrix_collision
-  BNE slow_positive
-
-  CLC
-  LDA sprite_hitbox_sx2, Y
-  ADC object_sx, X
-  STA collision_sx
-  LDA sprite_hitbox_x2, Y
-  ADC object_x, X
-  STA collision_x
+  BNE round_position_positive
 
   CLC
   LDA sprite_hitbox_y2, Y
@@ -961,15 +952,8 @@ positive_direction:
   STA collision_y
 
   JSR bg_matrix_collision
-  BNE slow_positive
+  BNE round_position_positive
   RTS
-
-slow_positive:
-  LDA #%00000000
-  STA object_vx, X
-  LDA #%00100000
-  STA object_svx, X
-  JMP rollback
 
 negative_direction:
 
@@ -992,15 +976,7 @@ negative_direction:
   STA collision_y
 
   JSR bg_matrix_collision
-  BNE slow_negative
-
-  CLC
-  LDA sprite_hitbox_sx1, Y
-  ADC object_sx, X
-  STA collision_sx
-  LDA sprite_hitbox_x1, Y
-  ADC object_x, X
-  STA collision_x
+  BNE round_position_negative
 
   CLC
   LDA sprite_hitbox_y2, Y
@@ -1008,21 +984,48 @@ negative_direction:
   STA collision_y
 
   JSR bg_matrix_collision
-  BNE slow_negative
+  BNE round_position_negative
   RTS
 
-slow_negative:
-  LDA #%11111111
-  STA object_vx, X
-  LDA #%11100000
-  STA object_svx, X
-  ; JMP rollback
-
-rollback:
-  LDA backup_object_x
-  STA object_x, X
-  LDA backup_object_sx
+round_position_positive:
+  LDA #$80
+  STA collision_sx
+  LDA collision_x
+  AND #$f8
+  STA collision_x
+  DEC collision_x
+  SEC
+  LDA collision_sx
+  SBC sprite_hitbox_sx2, Y
   STA object_sx, X
+  LDA collision_x
+  SBC sprite_hitbox_x2, Y
+  STA object_x, X
+  ; stop speed
+  LDA #$00
+  STA object_vx, X
+  STA object_svx, X
+  RTS
+
+round_position_negative:
+  LDA #$00
+  STA collision_sx
+  LDA collision_x
+  AND #$f8
+  CLC
+  ADC #$08
+  STA collision_x
+  SEC
+  LDA collision_sx
+  SBC sprite_hitbox_sx1, Y
+  STA object_sx, X
+  LDA collision_x
+  SBC sprite_hitbox_x1, Y
+  STA object_x, X
+  ; stop speed
+  LDA #$00
+  STA object_vx, X
+  STA object_svx, X
   RTS
 .endproc
 
@@ -1051,8 +1054,7 @@ rollback:
   CMP backup_object_y
   BNE :+
   LDA object_sy, X
-  EOR backup_object_sy
-  AND #%10000000
+  CMP backup_object_sy
   BNE :+
   RTS
 :
@@ -1095,11 +1097,6 @@ positive_direction:
   LDA sprite_hitbox_x2, Y
   ADC object_x, X
   STA collision_x
-
-  CLC
-  LDA sprite_hitbox_y2, Y
-  ADC object_y, X
-  STA collision_y
 
   JSR bg_matrix_collision
   BNE slow_positive
@@ -1145,11 +1142,6 @@ negative_direction:
   LDA sprite_hitbox_x2, Y
   ADC object_x, X
   STA collision_x
-
-  CLC
-  LDA sprite_hitbox_y1, Y
-  ADC object_y, X
-  STA collision_y
 
   JSR bg_matrix_collision
   BNE slow_negative
