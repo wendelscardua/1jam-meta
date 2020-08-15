@@ -51,6 +51,12 @@ FT_DPCM_OFF=$c000
 
 ; game config
 
+GRAVITY = $0040 ; 8.8
+JUMP_SPEED = $fb00 ; 8.8
+CONTROL_ACCELERATION = $0030
+MAX_HORIZONTAL_SPEED = $0400
+
+
 ; debug - macros for NintendulatorDX interaction
 .ifdef DEBUG
 .macro debugOut str
@@ -219,6 +225,19 @@ vblankwait:
   PLA
   TAX
   PLA
+.endmacro
+
+; Sets N flag if NUM1 (16 bits) < NUM2 (16 bits)
+; From http://www.6502.org/tutorials/compare_beyond.html#5
+.macro signed_compare_words NUM1H, NUM1L, NUM2H, NUM2L
+  .local exit
+  LDA NUM1L ; NUM1-NUM2
+  CMP NUM2L
+  LDA NUM1H
+  SBC NUM2H
+  BVC exit ; N eor V
+  EOR #$80
+exit:
 .endmacro
 
 .proc irq_handler
@@ -652,17 +671,16 @@ ground_controls:
   AND #BUTTON_LEFT
   BEQ :+
 
-  LDA object_vx
-  CMP #%11111100
-  BEQ :+
+  signed_compare_words object_vx, object_svx, #>(-MAX_HORIZONTAL_SPEED), #<(-MAX_HORIZONTAL_SPEED)
+  BMI :+
 
   CLC
   LDA object_svx
-  ADC #%11010000
+  ADC #<(-CONTROL_ACCELERATION)
   STA object_svx
 
   LDA object_vx
-  ADC #%11111111
+  ADC #>(-CONTROL_ACCELERATION)
   STA object_vx
 
 :
@@ -670,17 +688,16 @@ ground_controls:
   AND #BUTTON_RIGHT
   BEQ :+
 
-  LDA object_vx
-  CMP #%00000100
-  BCS :+
+  signed_compare_words #>MAX_HORIZONTAL_SPEED, #<MAX_HORIZONTAL_SPEED, object_vx, object_svx
+  BMI :+
 
   CLC
   LDA object_svx
-  ADC #%00110000
+  ADC #<CONTROL_ACCELERATION
   STA object_svx
 
   LDA object_vx
-  ADC #%00000000
+  ADC #>CONTROL_ACCELERATION
   STA object_vx
 
 :
@@ -690,9 +707,9 @@ ground_controls:
   LDA object_flags
   EOR #OBJ_GROUNDED_FLAG
   STA object_flags
-  LDA #%00000000
+  LDA #<JUMP_SPEED
   STA object_svy
-  LDA #%11111011
+  LDA #>JUMP_SPEED
   STA object_vy
 :
   RTS
@@ -1011,10 +1028,10 @@ rollback:
   ; vertical movement
   ; G
   LDA object_svy, X
-  ADC #%01000000
+  ADC #<GRAVITY
   STA object_svy, X
   LDA object_vy, X
-  ADC #%00000000
+  ADC #>GRAVITY
   STA object_vy, X
 
   CLC
