@@ -175,13 +175,14 @@ object_vy: .res MAX_OBJECTS
 object_svy: .res MAX_OBJECTS
 object_flags: .res MAX_OBJECTS
 ; flags:
-; ?maaaaaf
+; gmaaaaaf
 ; |||||||+- flip (0 = face right, 1 = face left)
 ; ||++++++- anim "index" (* 4 + anim frame = actual anim_sprites index)
 ; |+------- move flag, tells if object moves
-; +-------- unused (for now)
+; +-------- grounded
 OBJ_ANIM_MASK = %00111111
 OBJ_MOVE_FLAG = %01000000
+OBJ_GROUNDED_FLAG = %10000000
 
 .segment "CODE"
 
@@ -576,7 +577,7 @@ etc:
   RTS
 .endproc
 
-.proc platforming_input
+.proc update_horizontal_speed
   LDA object_vx
   BMI @negative_speed
   BEQ @tiebreak
@@ -596,6 +597,8 @@ etc:
   AND #%11000000
   ORA #%00000010
   STA object_flags
+  AND #OBJ_GROUNDED_FLAG
+  BEQ @endspeed
 
   ; decay positive speed
 
@@ -617,6 +620,8 @@ etc:
   AND #%11000000
   ORA #%00000011
   STA object_flags
+  AND #OBJ_GROUNDED_FLAG
+  BEQ @endspeed
 
   ; decay negative speed
   CLC
@@ -633,8 +638,16 @@ etc:
 
   ; JMP @endspeed
 @endspeed:
+  RTS
+.endproc
 
+.proc platforming_input
+  JSR update_horizontal_speed
   JSR readjoy
+  LDA object_flags
+  AND #OBJ_GROUNDED_FLAG
+  BEQ air_controls
+ground_controls:
   LDA buttons
   AND #BUTTON_LEFT
   BEQ :+
@@ -671,7 +684,20 @@ etc:
   STA object_vx
 
 :
+  LDA pressed_buttons
+  AND #BUTTON_UP
+  BEQ :+
+  LDA object_flags
+  EOR #OBJ_GROUNDED_FLAG
+  STA object_flags
+  LDA #%00000000
+  STA object_svy
+  LDA #%11111100
+  STA object_vy
+:
   RTS
+air_controls:
+  RTS  
 .endproc
 
 .proc playing
@@ -835,7 +861,7 @@ etc:
   BEQ @next
   
   JSR physics_update_single_object_horizontal
-  ; JSR physics_update_single_object_vertical
+  JSR physics_update_single_object_vertical
 @next:
   INX
   CPX objects_length
@@ -976,6 +1002,150 @@ rollback:
   STA object_x, X
   LDA backup_object_sx
   STA object_sx, X
+  RTS
+.endproc
+
+.proc physics_update_single_object_vertical
+  ; compute movement for X-index object, handling collision
+
+  ; vertical movement
+  ; G
+  LDA object_svy, X
+  ADC #%00100000
+  STA object_svy, X
+  LDA object_vy, X
+  ADC #%00000000
+  STA object_vy, X
+
+  CLC
+  LDA object_sy, X
+  STA backup_object_sy
+  ADC object_svy, X
+  STA object_sy, X
+  LDA object_y, X
+  STA backup_object_y
+  ADC object_vy, X
+  STA object_y, X
+  ; skip collision if real position didn't change
+  CMP backup_object_y
+  BNE :+
+  LDA object_sy, X
+  EOR backup_object_sy
+  AND #%10000000
+  BNE :+
+  RTS
+:
+
+  LDA object_y, X
+  CMP backup_object_y
+  BCC negative_direction
+  BNE positive_direction
+  LDA object_sy, X
+  CMP backup_object_sy
+  BCC negative_direction
+
+positive_direction:
+
+  LDA object_flags, X
+  AND #OBJ_ANIM_MASK
+  LSR
+  TAY
+
+  CLC
+  LDA sprite_hitbox_sx1, Y
+  ADC object_sx, X
+  STA temp_sx
+  LDA sprite_hitbox_x1, Y
+  ADC object_x, X
+  STA temp_x
+
+  CLC
+  LDA sprite_hitbox_y2, Y
+  ADC object_y, X
+  STA temp_y
+
+  JSR bg_matrix_collision
+  BNE slow_positive
+
+  CLC
+  LDA sprite_hitbox_sx2, Y
+  ADC object_sx, X
+  STA temp_sx
+  LDA sprite_hitbox_x2, Y
+  ADC object_x, X
+  STA temp_x
+
+  CLC
+  LDA sprite_hitbox_y2, Y
+  ADC object_y, X
+  STA temp_y
+
+  JSR bg_matrix_collision
+  BNE slow_positive
+  RTS
+
+slow_positive:
+  LDA #%00000000
+  STA object_vy, X
+  LDA #%00100000
+  STA object_svy, X
+  LDA object_flags, X
+  ORA #OBJ_GROUNDED_FLAG
+  STA object_flags, X
+  JMP rollback
+
+negative_direction:
+
+  LDA object_flags, X
+  AND #OBJ_ANIM_MASK
+  LSR
+  TAY
+
+  CLC
+  LDA sprite_hitbox_sx1, Y
+  ADC object_sx, X
+  STA temp_sx
+  LDA sprite_hitbox_x1, Y
+  ADC object_x, X
+  STA temp_x
+
+  CLC
+  LDA sprite_hitbox_y1, Y
+  ADC object_y, X
+  STA temp_y
+
+  JSR bg_matrix_collision
+  BNE slow_negative
+
+  CLC
+  LDA sprite_hitbox_sx2, Y
+  ADC object_sx, X
+  STA temp_sx
+  LDA sprite_hitbox_x2, Y
+  ADC object_x, X
+  STA temp_x
+
+  CLC
+  LDA sprite_hitbox_y1, Y
+  ADC object_y, X
+  STA temp_y
+
+  JSR bg_matrix_collision
+  BNE slow_negative
+  RTS
+
+slow_negative:
+  LDA #%11111111
+  STA object_vy, X
+  LDA #%11100000
+  STA object_svy, X
+  ; JMP rollback
+
+rollback:
+  LDA backup_object_y
+  STA object_y, X
+  LDA backup_object_sy
+  STA object_sy, X
   RTS
 .endproc
 
