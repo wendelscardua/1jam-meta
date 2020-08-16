@@ -55,6 +55,7 @@ GRAVITY = $0040 ; 8.8
 JUMP_SPEED = $fb00 ; 8.8
 CONTROL_ACCELERATION = $0030 ; 9.7
 MAX_HORIZONTAL_SPEED = $0400 ; 9.7
+MAX_AIR_HORIZONTAL_SPEED = $0100 ; 9.7
 GROUND_SPEED_DECAY = $0020 ; 9.7
 
 ; debug - macros for NintendulatorDX interaction
@@ -719,6 +720,39 @@ ground_controls:
 :
   RTS
 air_controls:
+  LDA buttons
+  AND #BUTTON_LEFT
+  BEQ :+
+
+  signed_compare_words object_vx, object_svx, #>(-MAX_AIR_HORIZONTAL_SPEED), #<(-MAX_AIR_HORIZONTAL_SPEED)
+  BMI :+
+
+  CLC
+  LDA object_svx
+  ADC #<(-CONTROL_ACCELERATION)
+  STA object_svx
+
+  LDA object_vx
+  ADC #>(-CONTROL_ACCELERATION)
+  STA object_vx
+
+:
+  LDA buttons
+  AND #BUTTON_RIGHT
+  BEQ :+
+
+  signed_compare_words #>MAX_AIR_HORIZONTAL_SPEED, #<MAX_AIR_HORIZONTAL_SPEED, object_vx, object_svx
+  BMI :+
+
+  CLC
+  LDA object_svx
+  ADC #<CONTROL_ACCELERATION
+  STA object_svx
+
+  LDA object_vx
+  ADC #>CONTROL_ACCELERATION
+  STA object_vx
+:
   RTS  
 .endproc
 
@@ -1173,20 +1207,20 @@ negative_direction:
   ; tweak right 
   CLC
   LDA object_sx, Y
-  ADC #$80
+  ADC #$00
   STA object_sx, Y
   LDA object_x, Y
-  ADC #$00
+  ADC #$01
   STA object_x, Y
   RTS
 :
   ; tweak left
   SEC
   LDA object_sx, Y
-  SBC #$80
+  SBC #$00
   STA object_sx, Y
   LDA object_x, Y
-  SBC #$00
+  SBC #$01
   STA object_x, Y
   RTS
 
