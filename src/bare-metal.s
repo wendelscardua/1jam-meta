@@ -131,6 +131,7 @@ temp_sy: .res 1
 collision_x: .res 1
 collision_sx: .res 1
 collision_y: .res 1
+collision_top_flags: .res 1 ; for tweaking vertical movement during jumps
 
 .struct Box
   x1 .byte
@@ -1102,8 +1103,27 @@ positive_direction:
   BNE round_position_positive
   RTS
 
-negative_direction:
+round_position_positive:
+  LDA collision_y
+  AND #$f0
+  SEC
+  SBC #$01
+  SEC
+  SBC sprite_hitbox_y2
+  STA object_y, X
+  LDA #$00
+  STA object_sy, X
+  ; stop speed
+  STA object_vy, X
+  STA object_svy, X
+  LDA object_flags, X
+  ORA #OBJ_GROUNDED_FLAG
+  STA object_flags, X
+  RTS
 
+negative_direction:
+  LDA #%00
+  STA collision_top_flags
   LDA object_flags, X
   AND #OBJ_ANIM_MASK
   LSR
@@ -1123,7 +1143,10 @@ negative_direction:
   STA collision_y
 
   JSR bg_matrix_collision
-  BNE round_position_negative
+  BEQ :+
+  LDA #%10
+  STA collision_top_flags
+:
 
   CLC
   LDA sprite_hitbox_sx2, Y
@@ -1132,27 +1155,39 @@ negative_direction:
   LDA sprite_hitbox_x2, Y
   ADC object_x, X
   STA collision_x
-
   JSR bg_matrix_collision
-  BNE round_position_negative
-  RTS
+  BEQ :+
+  LDA #%01
+  ORA collision_top_flags
+  STA collision_top_flags
+:
 
-round_position_positive:
-  LDA collision_y
-  AND #$f0
+  LDA collision_top_flags
+  BNE :+
+  RTS
+:
+  CMP #%11
+  BEQ round_position_negative
+  CMP #%10
+  BNE :+
+  ; tweak right 
+  CLC
+  LDA object_sx, Y
+  ADC #$80
+  STA object_sx, Y
+  LDA object_x, Y
+  ADC #$00
+  STA object_x, Y
+  RTS
+:
+  ; tweak left
   SEC
-  SBC #$01
-  SEC
-  SBC sprite_hitbox_y2
-  STA object_y, X
-  LDA #$00
-  STA object_sy, X
-  ; stop speed
-  STA object_vy, X
-  STA object_svy, X
-  LDA object_flags, X
-  ORA #OBJ_GROUNDED_FLAG
-  STA object_flags, X
+  LDA object_sx, Y
+  SBC #$80
+  STA object_sx, Y
+  LDA object_x, Y
+  SBC #$00
+  STA object_x, Y
   RTS
 
 round_position_negative:
