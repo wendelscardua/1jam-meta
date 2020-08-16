@@ -710,7 +710,7 @@ ground_controls:
   AND #BUTTON_UP
   BEQ :+
   LDA object_flags
-  EOR #OBJ_GROUNDED_FLAG
+  AND #(~OBJ_GROUNDED_FLAG)
   STA object_flags
   LDA #<JUMP_SPEED
   STA object_svy
