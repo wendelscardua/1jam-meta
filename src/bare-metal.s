@@ -1088,7 +1088,7 @@ positive_direction:
   STA collision_y
 
   JSR bg_matrix_collision
-  BNE slow_positive
+  BNE round_position_positive
 
   CLC
   LDA sprite_hitbox_sx2, Y
@@ -1099,18 +1099,8 @@ positive_direction:
   STA collision_x
 
   JSR bg_matrix_collision
-  BNE slow_positive
+  BNE round_position_positive
   RTS
-
-slow_positive:
-  LDA #%00000000
-  STA object_vy, X
-  LDA #%00100000
-  STA object_svy, X
-  LDA object_flags, X
-  ORA #OBJ_GROUNDED_FLAG
-  STA object_flags, X
-  JMP rollback
 
 negative_direction:
 
@@ -1133,7 +1123,7 @@ negative_direction:
   STA collision_y
 
   JSR bg_matrix_collision
-  BNE slow_negative
+  BNE round_position_negative
 
   CLC
   LDA sprite_hitbox_sx2, Y
@@ -1144,21 +1134,45 @@ negative_direction:
   STA collision_x
 
   JSR bg_matrix_collision
-  BNE slow_negative
+  BNE round_position_negative
   RTS
 
-slow_negative:
-  LDA #%11111111
-  STA object_vy, X
-  LDA #%11100000
-  STA object_svy, X
-  ; JMP rollback
-
-rollback:
-  LDA backup_object_y
+round_position_positive:
+  LDA collision_y
+  AND #$f0
+  SEC
+  SBC #$01
+  SEC
+  SBC sprite_hitbox_y2
   STA object_y, X
-  LDA backup_object_sy
+  LDA #$00
   STA object_sy, X
+  ; stop speed
+  STA object_vy, X
+  STA object_svy, X
+  LDA object_flags, X
+  ORA #OBJ_GROUNDED_FLAG
+  STA object_flags, X
+  RTS
+
+round_position_negative:
+  LDA collision_y
+  AND #$f0
+  CLC
+  ADC #$10
+  SEC
+  SBC sprite_hitbox_y1
+  STA object_y, X
+  LDA #$00
+  STA object_sy, X
+  ; stopish
+  SEC
+  ROR object_vy, X
+  ROR object_svy, X
+  INC object_svy, X
+  BNE :+
+  INC object_vy, X
+:
   RTS
 .endproc
 
