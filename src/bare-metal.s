@@ -1218,24 +1218,24 @@ negative_direction:
   BEQ round_position_negative
   CMP #%10
   BNE :+
-  ; nudge right 
+  ; nudge right
   CLC
-  LDA object_sx, Y
+  LDA object_sx, X
   ADC #<(JUMP_NUDGE)
-  STA object_sx, Y
-  LDA object_x, Y
+  STA object_sx, X
+  LDA object_x, X
   ADC #>(JUMP_NUDGE)
-  STA object_x, Y
+  STA object_x, X
   RTS
 :
   ; nudge left
   SEC
-  LDA object_sx, Y
+  LDA object_sx, X
   SBC #<(JUMP_NUDGE)
-  STA object_sx, Y
-  LDA object_x, Y
+  STA object_sx, X
+  LDA object_x, X
   SBC #>(JUMP_NUDGE)
-  STA object_x, Y
+  STA object_x, X
   RTS
 
 round_position_negative:
