@@ -1418,15 +1418,10 @@ return:
 
 .segment "RODATA"
 
-game_state_handlers_l:
-  .byte <(waiting_to_start-1)
-  .byte <(playing-1)
-  .byte <(game_over-1)
+.define game_state_handlers waiting_to_start-1, playing-1, game_over-1
 
-game_state_handlers_h:
-  .byte >(waiting_to_start-1)
-  .byte >(playing-1)
-  .byte >(game_over-1)
+game_state_handlers_l: .lobytes game_state_handlers
+game_state_handlers_h: .hibytes game_state_handlers
 
 palettes:
 .incbin "../assets/bg-palettes.pal"
@@ -1470,10 +1465,9 @@ sprite_hitbox_sx2:
 sprite_hitbox_y2:
   .byte $0f, $0f
 
-level_data_pointers_l:
-  .byte <(level_0_data)
-level_data_pointers_h:
-  .byte >(level_0_data)
+.define level_data_pointers level_0_data
+level_data_pointers_l: .lobytes level_data_pointers
+level_data_pointers_h: .hibytes level_data_pointers
 
 ; level data format:
 ; left and right nametable pointers
