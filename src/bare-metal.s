@@ -1356,6 +1356,7 @@ round_position_negative:
   SEC
   LDA object_sx
   SBC #%00000000
+  AND #%10000000
   STA scroll_sx
   LDA object_x
   SBC #%01000000
@@ -1372,6 +1373,7 @@ round_position_negative:
 @far_from_right:
   STA scroll_x
   LDA object_sx
+  AND #%10000000
   STA scroll_sx
 
   RTS
