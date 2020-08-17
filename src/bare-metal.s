@@ -509,17 +509,19 @@ etc:
   restore_regs
 
   LDX #0
-  ; add robot (robot is always the first object)
 
-  LDA (addr_ptr), Y ; read robot x
+  ; read objects (zero = stop)
+  ; first object = robot
+@objects_loop:
+  LDA (addr_ptr), Y
+  BEQ @end_of_objects
   INY
   STA object_x, X
-
-  LDA (addr_ptr), Y ; read robot y
+  LDA (addr_ptr), Y
   INY
   STA object_y, X
-
-  LDA #%01000000
+  LDA (addr_ptr), Y
+  INY
   STA object_flags, X
 
   LDA #$0
@@ -530,6 +532,10 @@ etc:
   STA object_vy, X
   STA object_svy, X
   INX
+  JMP @objects_loop
+
+@end_of_objects:
+  INY
 
   STX objects_length
 
@@ -1488,13 +1494,13 @@ level_data_pointers_h:
 
 ; level data format:
 ; left and right nametable pointers
-; robot x, robot y (assume subx = 0)
+; object x, y, flags (assume subx = 0) (x = 0 means end of objects)
 ; bg matrix pointer
 
 level_0_data:
-  .word level_0_left_nametable
-  .word level_0_right_nametable
-  .byte $30, $c0
+  .word level_0_left_nametable, level_0_right_nametable
+  .byte $30, $c0, %01000000
+  .byte $00
   .word level_0_bg_matrix
 
 level_0_left_nametable: .incbin "../assets/nametables/level-00-left.rle"
