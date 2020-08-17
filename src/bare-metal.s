@@ -676,6 +676,13 @@ etc:
 .proc platforming_input
   JSR update_horizontal_speed
   JSR readjoy
+.ifdef DEBUG
+  LDA pressed_buttons
+  AND #BUTTON_SELECT
+  BEQ :+
+  debugOut { "Coordinates: ", fHex8(object_x), fHex8(object_sx), " (9.7), ", fHex8(object_y), fHex8(object_sy), " (8.8)." }
+:
+.endif
   LDA object_flags
   AND #OBJ_GROUNDED_FLAG
   BEQ air_controls
