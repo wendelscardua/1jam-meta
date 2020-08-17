@@ -1444,7 +1444,15 @@ sprites:
         metasprite_0_data, metasprite_1_data, metasprite_0_data, metasprite_1_data, \
         metasprite_2_data, metasprite_3_data, metasprite_2_data, metasprite_3_data, \
         metasprite_0_data, metasprite_4_data, metasprite_5_data, metasprite_6_data, \
-        metasprite_2_data, metasprite_7_data, metasprite_8_data, metasprite_9_data
+        metasprite_2_data, metasprite_7_data, metasprite_8_data, metasprite_9_data, \
+        metasprite_10_data, metasprite_10_data, metasprite_10_data, metasprite_10_data, \
+        metasprite_10_data, metasprite_10_data, metasprite_10_data, metasprite_10_data, \
+        metasprite_11_data, metasprite_11_data, metasprite_11_data, metasprite_11_data, \
+        metasprite_11_data, metasprite_11_data, metasprite_11_data, metasprite_11_data, \
+        metasprite_12_data, metasprite_12_data, metasprite_12_data, metasprite_12_data, \
+        metasprite_12_data, metasprite_12_data, metasprite_12_data, metasprite_12_data, \
+        metasprite_13_data, metasprite_13_data, metasprite_13_data, metasprite_13_data, \
+        metasprite_13_data, metasprite_13_data, metasprite_13_data, metasprite_13_data
         
 anim_sprites_l: .lobytes anim_sprites_table
 anim_sprites_h: .hibytes anim_sprites_table
