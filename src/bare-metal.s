@@ -1486,7 +1486,9 @@ level_data_pointers_h: .hibytes level_data_pointers
 
 level_0_data:
   .word level_0_left_nametable, level_0_right_nametable
-  .byte $30, $c0, %01000000
+  .byte $30, $c0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
+  .byte $c0, $c8, sprite_id::button_off<<1
+  .byte $a8, $48, sprite_id::button_off<<1
   .byte $00
   .word level_0_bg_matrix
 
