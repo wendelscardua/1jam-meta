@@ -772,7 +772,7 @@ air_controls:
 
 .proc playing
   JSR platforming_input
-  
+
   ; render objects' sprites
   LDA #0
   STA sprite_counter
@@ -795,6 +795,7 @@ air_controls:
   LDA object_x, Y
   SBC scroll_x
   STA temp_x
+  BMI @next
 
   ASL temp_sx
   ROL temp_x
@@ -938,7 +939,6 @@ air_controls:
   BNE @loop
 
   JSR update_scroll
-
   RTS
 .endproc
 
