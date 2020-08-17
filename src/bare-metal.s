@@ -679,9 +679,9 @@ etc:
 .ifdef DEBUG
   LDA pressed_buttons
   AND #BUTTON_SELECT
-  BEQ :+
+  BEQ @noselect
   debugOut { "Coordinates: ", fHex8(object_x), fHex8(object_sx), " (9.7), ", fHex8(object_y), fHex8(object_sy), " (8.8)." }
-:
+@noselect:
 .endif
   LDA object_flags
   AND #OBJ_GROUNDED_FLAG
