@@ -1463,17 +1463,17 @@ anim_sprites_h: .hibytes anim_sprites_table
 ; hitboxes per anim sprite type
 
 sprite_hitbox_x1:
-  .byte $00, $00
+  .byte $00, $00, $00, $01, $00, $00
 sprite_hitbox_sx1:
-  .byte $00, $00
+  .byte $00, $00, $80, $00, $08, $08
 sprite_hitbox_y1:
-  .byte $00, $00
+  .byte $00, $00, $00, $00, $00, $03
 sprite_hitbox_x2:
-  .byte $07, $07
+  .byte $07, $07, $06, $02, $06, $06
 sprite_hitbox_sx2:
-  .byte $80, $80
+  .byte $80, $80, $00, $00, $00, $00
 sprite_hitbox_y2:
-  .byte $0f, $0f
+  .byte $0f, $0f, $0f, $07, $07, $07
 
 .define level_data_pointers level_0_data
 level_data_pointers_l: .lobytes level_data_pointers
