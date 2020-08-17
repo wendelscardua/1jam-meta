@@ -1392,6 +1392,12 @@ loop:
   INY
   CLC
   ADC temp_x
+  BCC :+
+  INY
+  INY
+  INY
+  JMP loop
+:
   STA oam_sprites+Sprite::xcoord,X
   LDA (addr_ptr),Y ; delta y
   INY
