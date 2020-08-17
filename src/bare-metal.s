@@ -1435,49 +1435,25 @@ palettes:
 sprites:
 .include "../assets/metasprites.s"
 
-anim_sprites_l:
-  ; 00: robot, idle
-  .byte <metasprite_0_data
-  .byte <metasprite_1_data
-  .byte <metasprite_0_data
-  .byte <metasprite_1_data
-  ; 00': robot, idle, flip
-  .byte <metasprite_2_data
-  .byte <metasprite_3_data
-  .byte <metasprite_2_data
-  .byte <metasprite_3_data
-  ; 01: robot, walk
-  .byte <metasprite_0_data
-  .byte <metasprite_4_data
-  .byte <metasprite_5_data
-  .byte <metasprite_6_data
-  ; 01': robot, walk, flip
-  .byte <metasprite_2_data
-  .byte <metasprite_7_data
-  .byte <metasprite_8_data
-  .byte <metasprite_9_data
+.enum sprite_id
+  robot_idle
+  robot_walk
+  box
+  laser
+  button_off
+  button_on
+.endenum
 
-anim_sprites_h:
-  ; 00: robot, idle
-  .byte >metasprite_0_data
-  .byte >metasprite_1_data
-  .byte >metasprite_0_data
-  .byte >metasprite_1_data
-  ; 00': robot, idle, flip
-  .byte >metasprite_2_data
-  .byte >metasprite_3_data
-  .byte >metasprite_2_data
-  .byte >metasprite_3_data
-  ; 01: robot, walk
-  .byte >metasprite_0_data
-  .byte >metasprite_4_data
-  .byte >metasprite_5_data
-  .byte >metasprite_6_data
-  ; 01': robot, walk, flip
-  .byte >metasprite_2_data
-  .byte >metasprite_7_data
-  .byte >metasprite_8_data
-  .byte >metasprite_9_data
+; each row = 4 frames of animation for a sprite or a sprite flip
+.define anim_sprites_table \
+        metasprite_0_data, metasprite_1_data, metasprite_0_data, metasprite_1_data, \
+        metasprite_2_data, metasprite_3_data, metasprite_2_data, metasprite_3_data, \
+        metasprite_0_data, metasprite_4_data, metasprite_5_data, metasprite_6_data, \
+        metasprite_2_data, metasprite_7_data, metasprite_8_data, metasprite_9_data
+        
+anim_sprites_l: .lobytes anim_sprites_table
+anim_sprites_h: .hibytes anim_sprites_table
+
 
 ; hitboxes per anim sprite type
 
