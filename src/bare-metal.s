@@ -57,6 +57,7 @@ CONTROL_ACCELERATION = $0030 ; 9.7
 MAX_HORIZONTAL_SPEED = $0400 ; 9.7
 MAX_AIR_HORIZONTAL_SPEED = $0100 ; 9.7
 GROUND_SPEED_DECAY = $0020 ; 9.7
+JUMP_NUDGE = $0100 ; 9.7
 
 ; debug - macros for NintendulatorDX interaction
 .ifdef DEBUG
@@ -1204,23 +1205,23 @@ negative_direction:
   BEQ round_position_negative
   CMP #%10
   BNE :+
-  ; tweak right 
+  ; nudge right 
   CLC
   LDA object_sx, Y
-  ADC #$00
+  ADC #<(JUMP_NUDGE)
   STA object_sx, Y
   LDA object_x, Y
-  ADC #$01
+  ADC #>(JUMP_NUDGE)
   STA object_x, Y
   RTS
 :
-  ; tweak left
+  ; nudge left
   SEC
   LDA object_sx, Y
-  SBC #$00
+  SBC #<(JUMP_NUDGE)
   STA object_sx, Y
   LDA object_x, Y
-  SBC #$01
+  SBC #>(JUMP_NUDGE)
   STA object_x, Y
   RTS
 
