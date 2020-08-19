@@ -1495,6 +1495,8 @@ level_0_data:
   .byte $30, $c0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
   .byte $c0, $c8, sprite_id::button_off<<1
   .byte $a8, $48, sprite_id::button_off<<1
+  .byte $9f, $40, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
+  .byte $40, $20, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
   .byte $00
   .word level_0_bg_matrix
 
