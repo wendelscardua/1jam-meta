@@ -317,13 +317,14 @@ forever:
   CMP old_nmis
   BEQ etc
   STA old_nmis
+  JSR refresh_oam
 .ifdef DEBUG
   LDA #%01011110  ; green tint
   STA PPUMASK
 .endif
   ; new frame code
   JSR game_state_handler
-  JSR screen_stuff
+  JSR fix_scroll
 .ifdef DEBUG
   LDA #%01111110  ; yellow tint
   STA PPUMASK
@@ -343,8 +344,7 @@ etc:
   JMP forever
 .endproc
 
-.proc screen_stuff
-  ; Fix Scroll
+.proc fix_scroll
   LDA PPUSTATUS
 
   LDA scroll_sx
@@ -360,9 +360,11 @@ etc:
   ROL
   ROL
   ORA #%10001000  ; turn on NMIs, sprites use second pattern table
-  
   STA PPUCTRL
+  RTS
+.endproc
 
+.proc refresh_oam
   ; Refresh OAM
   LDA #$00
   STA OAMADDR
@@ -820,6 +822,15 @@ air_controls:
   INY
   CPY objects_length
   BNE @loop
+
+  LDX sprite_counter
+  LDA #$f0
+:
+  STA oam_sprites+Sprite::ycoord, X
+  .repeat .sizeof(Sprite)
+  INX
+  .endrepeat
+  BNE :-
 
   RTS
 .endproc
@@ -1392,12 +1403,15 @@ loop:
   INY
   CLC
   ADC temp_x
-  BCC :+
-  INY
-  INY
-  INY
-  JMP loop
-:
+
+  ;  trying to skip offscreen tiles
+;  BCC :+
+;  INY
+;  INY
+;  INY
+;  JMP loop
+;:
+
   STA oam_sprites+Sprite::xcoord,X
   LDA (addr_ptr),Y ; delta y
   INY
