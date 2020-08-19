@@ -318,13 +318,13 @@ forever:
   BEQ etc
   STA old_nmis
   JSR refresh_oam
+  JSR fix_scroll
 .ifdef DEBUG
   LDA #%01011110  ; green tint
   STA PPUMASK
 .endif
   ; new frame code
   JSR game_state_handler
-  JSR fix_scroll
 .ifdef DEBUG
   LDA #%01111110  ; yellow tint
   STA PPUMASK
@@ -785,7 +785,9 @@ air_controls:
   LSR
   LSR
   STA anim_offset
-  
+
+  JSR update_scroll
+
   LDY #0
 @loop:
   ; temp x = x - scroll x
@@ -823,6 +825,7 @@ air_controls:
   CPY objects_length
   BNE @loop
 
+  ; erase sprite leftovers
   LDX sprite_counter
   LDA #$f0
 :
@@ -949,7 +952,6 @@ air_controls:
   CPX objects_length
   BNE @loop
 
-  JSR update_scroll
   RTS
 .endproc
 
@@ -1405,12 +1407,12 @@ loop:
   ADC temp_x
 
   ;  trying to skip offscreen tiles
-;  BCC :+
-;  INY
-;  INY
-;  INY
-;  JMP loop
-;:
+  BCC :+
+  INY
+  INY
+  INY
+  JMP loop
+:
 
   STA oam_sprites+Sprite::xcoord,X
   LDA (addr_ptr),Y ; delta y
