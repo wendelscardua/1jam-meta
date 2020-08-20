@@ -113,6 +113,13 @@ oam_sprites:
   game_over
 .endenum
 
+.enum direction
+  up = %1000
+  down = %0100
+  left = %0010
+  right = %0001
+.endenum
+
 .importzp buttons
 .importzp last_frame_buttons
 .importzp released_buttons
@@ -129,6 +136,8 @@ temp_x: .res 1
 temp_sx: .res 1
 temp_y: .res 1
 temp_sy: .res 1
+temp_idx: .res 1
+temp_dir: .res 1
 
 collision_x: .res 1
 collision_sx: .res 1
@@ -978,6 +987,7 @@ air_controls:
 :
 
   JSR horizontal_bg_collision
+  JSR inter_object_collision
   RTS
 .endproc
 
@@ -1011,6 +1021,7 @@ air_controls:
   RTS
 :
   JSR vertical_bg_collision
+  JSR inter_object_collision
   RTS
 .endproc
 
@@ -1030,6 +1041,8 @@ air_controls:
   BCC negative_direction
 
 positive_direction:
+  LDA #direction::right
+  STA temp_dir
 
   LDA object_flags, X
   AND #OBJ_ANIM_MASK
@@ -1062,6 +1075,8 @@ positive_direction:
   RTS
 
 negative_direction:
+  LDA #direction::left
+  STA temp_dir
 
   LDA object_flags, X
   AND #OBJ_ANIM_MASK
@@ -1149,6 +1164,8 @@ round_position_negative:
   BCC negative_direction
 
 positive_direction:
+  LDA #direction::down
+  STA temp_dir
 
   LDA object_flags, X
   AND #OBJ_ANIM_MASK
@@ -1202,6 +1219,9 @@ round_position_positive:
   RTS
 
 negative_direction:
+  LDA #direction::up
+  STA temp_dir
+
   LDA #%00
   STA collision_top_flags
   LDA object_flags, X
@@ -1288,6 +1308,200 @@ round_position_negative:
   BNE :+
   INC object_vy, X
 :
+  RTS
+.endproc
+
+.proc inter_object_collision
+  ; checks if X-index object collides with any other object
+  ; cobbles Y
+
+  STX temp_idx
+  LDA object_flags, X
+  AND #OBJ_ANIM_MASK
+  LSR
+  TAY
+
+  CLC
+  LDA sprite_hitbox_sx1, Y
+  ADC object_sx, X
+  STA hitbox_a+Box::sx1
+  LDA sprite_hitbox_x1, Y
+  ADC object_x, X
+  STA hitbox_a+Box::x1
+
+  CLC
+  LDA sprite_hitbox_y1, Y
+  ADC object_y, X
+  STA hitbox_a+Box::y1
+
+  CLC
+  LDA sprite_hitbox_sx2, Y
+  ADC object_sx, X
+  STA hitbox_a+Box::sx2
+  LDA sprite_hitbox_x2, Y
+  ADC object_x, X
+  STA hitbox_a+Box::x2
+
+  CLC
+  LDA sprite_hitbox_y2, Y
+  ADC object_y, X
+  STA hitbox_a+Box::y2
+
+  LDY #0
+@loop:
+  CPY temp_idx
+  BEQ @next
+  
+  LDA object_flags, Y
+  AND #OBJ_ANIM_MASK
+  LSR
+  TAX
+
+  CLC
+  LDA sprite_hitbox_sx1, X
+  ADC object_sx, Y
+  STA hitbox_b+Box::sx1
+  LDA sprite_hitbox_x1, X
+  ADC object_x, Y
+  STA hitbox_b+Box::x1
+
+  CLC
+  LDA sprite_hitbox_y1, X
+  ADC object_y, Y
+  STA hitbox_b+Box::y1
+
+  CLC
+  LDA sprite_hitbox_sx2, X
+  ADC object_sx, Y
+  STA hitbox_b+Box::sx2
+  LDA sprite_hitbox_x2, X
+  ADC object_x, Y
+  STA hitbox_b+Box::x2
+
+  CLC
+  LDA sprite_hitbox_y2, X
+  ADC object_y, Y
+  STA hitbox_b+Box::y2
+
+  JSR hitbox_collision
+  BEQ @next
+  JSR process_x_y_collision
+  JMP @end
+@next:
+  INY
+  CPY objects_length
+  BNE @loop
+@end:
+  LDX temp_idx
+  RTS
+.endproc
+
+.proc process_x_y_collision
+  LDX temp_idx
+  ; Y = other object index
+  LDA temp_dir
+  AND #(direction::up | direction::down)
+  BEQ @left_right
+
+  LDA object_svy, X
+  STA object_svy, Y
+  LDA object_vy, X
+  STA object_vy, Y
+  LDA #$00
+  STA object_svy, X
+  LDA #$00
+  STA object_vy, X
+
+  JMP @collision_fit
+@left_right:
+  LDA object_svx, X
+  STA object_svx, Y
+  LDA object_vx, X
+  STA object_vx, Y
+  LDA #$00
+  STA object_svx, X
+  LDA #$00
+  STA object_vx, X
+
+@collision_fit:
+
+  LDA object_flags, X
+  AND #OBJ_ANIM_MASK
+  LSR
+  TAY
+  ; X = object index
+  ; Y = sprite hitbox index
+
+  LDA temp_dir
+  CMP #direction::up
+  BNE :+
+
+  SEC
+  LDA hitbox_b+Box::y2
+  SBC sprite_hitbox_y1, Y
+  STA object_y, X
+  CLC
+  LDA object_y, X
+  ADC #$01
+  STA object_y, X
+
+  JMP @rollback
+:
+  CMP #direction::down
+  BNE :+
+
+  SEC
+  LDA hitbox_b+Box::y1
+  SBC sprite_hitbox_y2, Y
+  STA object_y, X
+  SEC
+  LDA object_y, X
+  SBC #$01
+  STA object_y, X
+
+  JMP @rollback
+:
+  CMP #direction::left
+  BNE :+
+
+  SEC
+  LDA hitbox_b+Box::sx2
+  SBC sprite_hitbox_sx1, Y
+  STA object_sx, X
+  LDA hitbox_b+Box::x2
+  SBC sprite_hitbox_x1, Y
+  STA object_x, X
+  CLC
+  LDA object_sx, X
+  ADC #$80
+  STA object_sx, X
+  LDA object_x, X
+  ADC #$00
+  STA object_x, X
+
+  JMP @rollback
+:
+  ; CMP #direction::right
+  ; BNE :+
+
+  SEC
+  LDA hitbox_b+Box::sx1
+  SBC sprite_hitbox_sx2, Y
+  STA object_sx, X
+  LDA hitbox_b+Box::x1
+  SBC sprite_hitbox_x2, Y
+  STA object_x, X
+  SEC
+  LDA object_sx, X
+  SBC #$80
+  STA object_sx, X
+  LDA object_x, X
+  SBC #$00
+  STA object_x, X
+  
+  JMP @rollback
+
+@rollback:
   RTS
 .endproc
 
