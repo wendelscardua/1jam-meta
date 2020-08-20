@@ -977,6 +977,50 @@ air_controls:
   RTS
 :
 
+  JSR horizontal_bg_collision
+  RTS
+.endproc
+
+.proc physics_update_single_object_vertical
+  ; compute movement for X-index object, handling collision
+
+  ; vertical movement
+  ; G
+  LDA object_svy, X
+  ADC #<GRAVITY
+  STA object_svy, X
+  LDA object_vy, X
+  ADC #>GRAVITY
+  STA object_vy, X
+
+  CLC
+  LDA object_sy, X
+  STA backup_object_sy
+  ADC object_svy, X
+  STA object_sy, X
+  LDA object_y, X
+  STA backup_object_y
+  ADC object_vy, X
+  STA object_y, X
+  ; skip collision if real position didn't change
+  CMP backup_object_y
+  BNE :+
+  LDA object_sy, X
+  CMP backup_object_sy
+  BNE :+
+  RTS
+:
+  JSR vertical_bg_collision
+  RTS
+.endproc
+
+
+.proc horizontal_bg_collision
+  ; checks if X-index object collides with bg tile
+  ; if so, it stops just before collision
+  ; input: X index, backup_object_*
+  ; cobbles: Y, object_* collision_*
+
   LDA object_x, X
   CMP backup_object_x
   BCC negative_direction
@@ -1091,36 +1135,11 @@ round_position_negative:
   RTS
 .endproc
 
-.proc physics_update_single_object_vertical
-  ; compute movement for X-index object, handling collision
-
-  ; vertical movement
-  ; G
-  LDA object_svy, X
-  ADC #<GRAVITY
-  STA object_svy, X
-  LDA object_vy, X
-  ADC #>GRAVITY
-  STA object_vy, X
-
-  CLC
-  LDA object_sy, X
-  STA backup_object_sy
-  ADC object_svy, X
-  STA object_sy, X
-  LDA object_y, X
-  STA backup_object_y
-  ADC object_vy, X
-  STA object_y, X
-  ; skip collision if real position didn't change
-  CMP backup_object_y
-  BNE :+
-  LDA object_sy, X
-  CMP backup_object_sy
-  BNE :+
-  RTS
-:
-
+.proc vertical_bg_collision
+  ; checks if X-index object collides with bg tile
+  ; if so, it stops just before collision
+  ; input: X index, backup_object_*
+  ; cobbles: Y, object_* collision_*
   LDA object_y, X
   CMP backup_object_y
   BCC negative_direction
