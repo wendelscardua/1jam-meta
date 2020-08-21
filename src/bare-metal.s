@@ -1450,6 +1450,10 @@ round_position_negative:
   CMP #direction::down
   BNE :+
 
+  LDA object_flags, X
+  ORA #OBJ_GROUNDED_FLAG
+  STA object_flags, X
+
   SEC
   LDA hitbox_b+Box::y1
   SBC sprite_hitbox_y2, Y
