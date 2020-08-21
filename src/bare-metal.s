@@ -180,6 +180,9 @@ old_nmis: .res 1
 game_state: .res 1
 
 current_level: .res 1
+level_door_x: .res 1
+level_door_y: .res 1
+level_door_open: .res 1
 
 anim_offset: .res 1
 
@@ -549,6 +552,13 @@ etc:
   JSR unrle
   restore_regs
 
+  LDA (addr_ptr), Y
+  INY
+  STA level_door_x
+  LDA (addr_ptr), Y
+  INY
+  STA level_door_y
+
   LDX #0
 
   ; read objects (zero = stop)
@@ -590,6 +600,8 @@ etc:
   INY
 
   STX objects_length
+  LDA #$00
+  STA level_door_open
 
   ; read bg matrix pointer
   LDA (addr_ptr), Y
@@ -1860,11 +1872,13 @@ level_data_pointers_h: .hibytes level_data_pointers
 
 ; level data format:
 ; left and right nametable pointers
+; center of door x, y
 ; object x, y, flags (assume subx = 0) (x = 0 means end of objects)
 ; bg matrix pointer
 
 level_0_data:
   .word level_0_left_nametable, level_0_right_nametable
+  .byte $d4, $48
   .byte $30, $c0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $c0, $c8, sprite_id::button_off<<1
