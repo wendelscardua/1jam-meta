@@ -341,7 +341,7 @@ clear_ram:
   STA rng_seed+1
 
   ; JSR go_to_title ; TODO: reenable later
-  LDA #0
+  LDA #1
   STA current_level
   JSR go_to_playing
 
@@ -1944,7 +1944,7 @@ sprite_hitbox_sx2:
 sprite_hitbox_y2:
   .byte $0f, $0f, $0f, $07, $07, $07
 
-.define level_data_pointers level_0_data
+.define level_data_pointers level_0_data, level_1_data
 level_data_pointers_l: .lobytes level_data_pointers
 level_data_pointers_h: .hibytes level_data_pointers
 
@@ -1991,6 +1991,36 @@ level_0_bg_matrix:
   .byte %10000000, %00000100, %00000000, %01111001
   .byte %10000000, %00000000, %00000011, %11000001
   .byte %11111111, %11111111, %11111111, %11111111
+
+level_1_data:
+  .word level_1_left_nametable, level_1_right_nametable
+  .byte $c4, $a8
+  .word $2690
+  .byte $01
+  .byte $30, $50, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
+    .byte button_type::none, $00, $00
+  .byte $00
+  .word level_1_bg_matrix
+
+level_1_left_nametable: .incbin "../assets/nametables/level-01-left.rle"
+level_1_right_nametable: .incbin "../assets/nametables/level-01-right.rle"
+
+level_1_bg_matrix:
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00111111, %11111111, %11111111, %11110000
+  .byte %00100000, %00000000, %00000000, %00010000
+  .byte %00100000, %00000000, %00000000, %00010000
+  .byte %00100000, %00000000, %00000000, %00010000
+  .byte %00100000, %00000000, %00000000, %00010000
+  .byte %00100000, %00000000, %00000000, %00010000
+  .byte %00100000, %00000000, %00000000, %00010000
+  .byte %00100000, %00000000, %00000000, %00010000
+  .byte %00100000, %00000000, %00000000, %00010000
+  .byte %00111111, %11111111, %11111111, %11110000
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
