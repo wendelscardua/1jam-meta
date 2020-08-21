@@ -908,7 +908,34 @@ air_controls:
   RTS
 .endproc
 
+.proc wincon
+  LDA level_door_open
+  BNE :+
+  RTS
+:
+  LDX #$00
+  JSR prepare_object_hitbox
+  LDA level_door_x
+  STA hitbox_b+Box::x1
+  STA hitbox_b+Box::x2
+  LDA #$00
+  STA hitbox_b+Box::sx1
+  STA hitbox_b+Box::sx2
+  LDA level_door_y
+  STA hitbox_b+Box::y1
+  STA hitbox_b+Box::y2
+  JSR hitbox_collision
+  BNE :+
+  RTS
+:
+  KIL
+  INC current_level
+  JSR go_to_playing
+  RTS
+.endproc
+
 .proc playing
+  JSR wincon
   JSR platforming_input
 
   ; render objects' sprites
@@ -1994,7 +2021,7 @@ level_0_bg_matrix:
 
 level_1_data:
   .word level_1_left_nametable, level_1_right_nametable
-  .byte $c4, $a8
+  .byte $c8, $a8
   .word $2690
   .byte $01
   .byte $30, $50, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
