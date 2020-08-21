@@ -182,6 +182,7 @@ game_state: .res 1
 current_level: .res 1
 level_door_x: .res 1
 level_door_y: .res 1
+level_door_ppu_addr: .res 2
 level_door_open: .res 1
 
 anim_offset: .res 1
@@ -350,6 +351,7 @@ forever:
   BEQ etc
   STA old_nmis
   JSR refresh_oam
+  JSR update_tiles
   JSR fix_scroll
 .ifdef DEBUG
   LDA #%01011110  ; green tint
@@ -558,6 +560,13 @@ etc:
   LDA (addr_ptr), Y
   INY
   STA level_door_y
+  
+  LDA (addr_ptr), Y
+  INY
+  STA level_door_ppu_addr
+  LDA (addr_ptr), Y
+  INY
+  STA level_door_ppu_addr+1
 
   LDX #0
 
@@ -834,6 +843,69 @@ air_controls:
   RTS  
 .endproc
 
+.proc update_tiles
+  LDA game_state
+  CMP #game_states::playing
+  BEQ :+
+  RTS
+:
+  LDA level_door_open
+  BEQ @closed
+@open:
+  BIT PPUSTATUS
+  LDA level_door_ppu_addr+1
+  STA PPUADDR
+  LDA level_door_ppu_addr
+  STA PPUADDR
+  LDA #$80
+  STA PPUDATA
+  LDA #$81
+  STA PPUDATA
+  CLC
+  LDA level_door_ppu_addr
+  ADC #$20
+  PHA
+  LDA level_door_ppu_addr+1
+  ADC #$00
+  STA PPUADDR
+  PLA
+  STA PPUADDR
+  LDA #$90
+  STA PPUDATA
+  LDA #$91
+  STA PPUDATA
+  JMP @resetaddr
+@closed:
+  BIT PPUSTATUS
+  LDA level_door_ppu_addr+1
+  STA PPUADDR
+  LDA level_door_ppu_addr
+  STA PPUADDR
+  LDA #$8d
+  STA PPUDATA
+  LDA #$8e
+  STA PPUDATA
+  CLC
+  LDA level_door_ppu_addr
+  ADC #$20
+  PHA
+  LDA level_door_ppu_addr+1
+  ADC #$00
+  STA PPUADDR
+  PLA
+  STA PPUADDR
+  LDA #$9d
+  STA PPUDATA
+  LDA #$9e
+  STA PPUDATA
+@resetaddr:
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+  RTS
+.endproc
+
 .proc playing
   JSR platforming_input
 
@@ -1060,6 +1132,8 @@ air_controls:
   STA object_sx, Y
   RTS
 @open_door:
+  LDA #$01
+  STA level_door_open
   RTS
 .endproc
 
@@ -1073,6 +1147,8 @@ air_controls:
 @respawn_box:
   RTS
 @open_door:
+  LDA #$00
+  STA level_door_open
   RTS
 .endproc
 
@@ -1873,12 +1949,14 @@ level_data_pointers_h: .hibytes level_data_pointers
 ; level data format:
 ; left and right nametable pointers
 ; center of door x, y
+; door ppu address
 ; object x, y, flags (assume subx = 0) (x = 0 means end of objects)
 ; bg matrix pointer
 
 level_0_data:
   .word level_0_left_nametable, level_0_right_nametable
   .byte $d4, $48
+  .word $2594
   .byte $30, $c0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $c0, $c8, sprite_id::button_off<<1
