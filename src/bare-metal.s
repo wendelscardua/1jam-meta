@@ -1971,7 +1971,7 @@ sprite_hitbox_sx2:
 sprite_hitbox_y2:
   .byte $0f, $0f, $0f, $07, $07, $07
 
-.define level_data_pointers level_0_data, level_1_data
+.define level_data_pointers level_00_data, level_01_data
 level_data_pointers_l: .lobytes level_data_pointers
 level_data_pointers_h: .hibytes level_data_pointers
 
@@ -1983,8 +1983,8 @@ level_data_pointers_h: .hibytes level_data_pointers
 ; object x, y, flags (assume subx = 0) (x = 0 means end of objects)
 ; bg matrix pointer
 
-level_0_data:
-  .word level_0_left_nametable, level_0_right_nametable
+level_00_data:
+  .word level_00_left_nametable, level_00_right_nametable
   .byte $d4, $48
   .word $2594
   .byte $00
@@ -1997,12 +1997,12 @@ level_0_data:
   .byte $40, $20, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
     .byte button_type::none, $a0, $20
   .byte $00
-  .word level_0_bg_matrix
+  .word level_00_bg_matrix
 
-level_0_left_nametable: .incbin "../assets/nametables/level-00-left.rle"
-level_0_right_nametable: .incbin "../assets/nametables/level-00-right.rle"
+level_00_left_nametable: .incbin "../assets/nametables/level-00-left.rle"
+level_00_right_nametable: .incbin "../assets/nametables/level-00-right.rle"
 
-level_0_bg_matrix:
+level_00_bg_matrix:
   .byte %11111111, %11111111, %11111111, %11111111
   .byte %10000000, %00000000, %00000000, %00000001
   .byte %10000000, %00000000, %00000000, %00000001
@@ -2019,20 +2019,20 @@ level_0_bg_matrix:
   .byte %10000000, %00000000, %00000011, %11000001
   .byte %11111111, %11111111, %11111111, %11111111
 
-level_1_data:
-  .word level_1_left_nametable, level_1_right_nametable
+level_01_data:
+  .word level_01_left_nametable, level_01_right_nametable
   .byte $c8, $a8
   .word $2690
   .byte $01
   .byte $30, $a0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $00
-  .word level_1_bg_matrix
+  .word level_01_bg_matrix
 
-level_1_left_nametable: .incbin "../assets/nametables/level-01-left.rle"
-level_1_right_nametable: .incbin "../assets/nametables/level-01-right.rle"
+level_01_left_nametable: .incbin "../assets/nametables/level-01-left.rle"
+level_01_right_nametable: .incbin "../assets/nametables/level-01-right.rle"
 
-level_1_bg_matrix:
+level_01_bg_matrix:
   .byte %00000000, %00000000, %00000000, %00000000
   .byte %00000000, %00000000, %00000000, %00000000
   .byte %00111111, %11111111, %11111111, %11110000
