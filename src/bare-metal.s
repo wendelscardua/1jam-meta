@@ -1866,13 +1866,13 @@ level_data_pointers_h: .hibytes level_data_pointers
 level_0_data:
   .word level_0_left_nametable, level_0_right_nametable
   .byte $30, $c0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
-  .byte button_type::none, $00, $00
+    .byte button_type::none, $00, $00
   .byte $c0, $c8, sprite_id::button_off<<1
-  .byte button_type::respawn_box, $03, $00
+    .byte button_type::respawn_box, $03, $00
   .byte $b8, $68, sprite_id::button_off<<1
-  .byte button_type::open_door, $00, $00
+    .byte button_type::open_door, $00, $00
   .byte $40, $20, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
-  .byte button_type::none, $a0, $20
+    .byte button_type::none, $a0, $20
   .byte $00
   .word level_0_bg_matrix
 
