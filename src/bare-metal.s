@@ -222,7 +222,8 @@ OBJ_MOVE_FLAG = %01000000
 OBJ_GROUNDED_FLAG = %10000000
 
 object_button_command: .res MAX_OBJECTS
-object_button_argument: .res MAX_OBJECTS
+object_button_arg1: .res MAX_OBJECTS
+object_button_arg2: .res MAX_OBJECTS
 object_pressed: .res MAX_OBJECTS
 
 .segment "CODE"
@@ -566,9 +567,13 @@ etc:
   LDA (addr_ptr), Y
   INY
   STA object_button_command, X
+
   LDA (addr_ptr), Y
   INY
-  STA object_button_argument, X
+  STA object_button_arg1, X
+  LDA (addr_ptr), Y
+  INY
+  STA object_button_arg2, X
 
   LDA #$0
   STA object_sx, X
@@ -1001,10 +1006,16 @@ air_controls:
   LDA object_pressed, X
   BEQ @not_pressed
 @pressed:
+  CMP #$10
+  BNE @next
+
   LDA object_flags, X
   AND #(~OBJ_ANIM_MASK)
   ORA #(sprite_id::button_on<<1)
   STA object_flags, X
+
+  JSR activate_button
+
   JMP @next
 
 @not_pressed:
@@ -1012,9 +1023,44 @@ air_controls:
   AND #(~OBJ_ANIM_MASK)
   ORA #(sprite_id::button_off<<1)
   STA object_flags, X
+  JSR deactivate_button
 @next:
   DEX
   BPL @loop
+  RTS
+.endproc
+
+.proc activate_button
+  LDA object_button_command, X
+  CMP #button_type::respawn_box
+  BEQ @respawn_box
+  CMP #button_type::open_door
+  BEQ @open_door
+  RTS
+@respawn_box:
+  LDA object_button_arg1, X
+  TAY
+  LDA object_button_arg1, Y
+  STA object_x, Y
+  LDA object_button_arg2, Y
+  STA object_y, Y
+  LDA #$00
+  STA object_sx, Y
+  RTS
+@open_door:
+  RTS
+.endproc
+
+.proc deactivate_button
+  LDA object_button_command, X
+  CMP #button_type::respawn_box
+  BEQ @respawn_box
+  CMP #button_type::open_door
+  BEQ @open_door
+  RTS
+@respawn_box:
+  RTS
+@open_door:
   RTS
 .endproc
 
@@ -1820,13 +1866,13 @@ level_data_pointers_h: .hibytes level_data_pointers
 level_0_data:
   .word level_0_left_nametable, level_0_right_nametable
   .byte $30, $c0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
-  .byte button_type::none, $00
+  .byte button_type::none, $00, $00
   .byte $c0, $c8, sprite_id::button_off<<1
-  .byte button_type::respawn_box, $03
+  .byte button_type::respawn_box, $03, $00
   .byte $b8, $68, sprite_id::button_off<<1
-  .byte button_type::open_door, $00
+  .byte button_type::open_door, $00, $00
   .byte $40, $20, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
-  .byte button_type::none, $00
+  .byte button_type::none, $a0, $20
   .byte $00
   .word level_0_bg_matrix
 
