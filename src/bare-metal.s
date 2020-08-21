@@ -560,7 +560,7 @@ etc:
   LDA (addr_ptr), Y
   INY
   STA level_door_y
-  
+
   LDA (addr_ptr), Y
   INY
   STA level_door_ppu_addr
@@ -840,7 +840,7 @@ air_controls:
   ADC #>CONTROL_ACCELERATION
   STA object_vx
 :
-  RTS  
+  RTS
 .endproc
 
 .proc update_tiles
@@ -1163,7 +1163,7 @@ air_controls:
   LDA object_flags, X
   AND #OBJ_MOVE_FLAG
   BEQ @next
-  
+
   JSR physics_update_single_object_horizontal
   JSR physics_update_single_object_vertical
 @next:
@@ -1561,7 +1561,7 @@ round_position_negative:
 @loop:
   CPY temp_idx
   BEQ @next
-  
+
   LDA object_flags, Y
   AND #OBJ_ANIM_MASK
   LSR
@@ -1719,7 +1719,7 @@ round_position_negative:
   LDA object_x, X
   SBC #$00
   STA object_x, X
-  
+
   JMP @rollback
 
 @rollback:
@@ -1763,7 +1763,7 @@ round_position_negative:
   ; abcdefgh
   ; 00000cde
 
-  ROL temp_x ; a | bcd... 
+  ROL temp_x ; a | bcd...
   ROL temp_x ; b | cde...a
   ROL temp_x ; c | de...ab
 
@@ -1922,7 +1922,7 @@ sprites:
         metasprite_12_data, metasprite_12_data, metasprite_12_data, metasprite_12_data, \
         metasprite_13_data, metasprite_13_data, metasprite_13_data, metasprite_13_data, \
         metasprite_13_data, metasprite_13_data, metasprite_13_data, metasprite_13_data
-        
+
 anim_sprites_l: .lobytes anim_sprites_table
 anim_sprites_h: .hibytes anim_sprites_table
 
