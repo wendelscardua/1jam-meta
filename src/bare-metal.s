@@ -2024,7 +2024,7 @@ level_1_data:
   .byte $c8, $a8
   .word $2690
   .byte $01
-  .byte $30, $50, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
+  .byte $30, $a0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $00
   .word level_1_bg_matrix
