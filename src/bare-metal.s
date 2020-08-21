@@ -120,6 +120,21 @@ oam_sprites:
   right = %0001
 .endenum
 
+.enum sprite_id
+  robot_idle
+  robot_walk
+  box
+  laser
+  button_off
+  button_on
+.endenum
+
+.enum button_type
+  none = 0
+  respawn_box = 1 ; arg = object index of box
+  open_door = 2 ; arg = noop
+.endenum
+
 .importzp buttons
 .importzp last_frame_buttons
 .importzp released_buttons
@@ -185,7 +200,7 @@ backup_object_sy: .res 1
 ; object coordinates use subpixels for fractional movement
 ; (object_y, object_sy) = 8.8 number
 ; (object_x, object_sx) = 9.7 number (in order to cover two screens)
-MAX_OBJECTS = 20
+MAX_OBJECTS = 8
 objects_length: .res 1
 object_x: .res MAX_OBJECTS
 object_sx: .res MAX_OBJECTS
@@ -205,6 +220,10 @@ object_flags: .res MAX_OBJECTS
 OBJ_ANIM_MASK = %00111111
 OBJ_MOVE_FLAG = %01000000
 OBJ_GROUNDED_FLAG = %10000000
+
+object_button_command: .res MAX_OBJECTS
+object_button_argument: .res MAX_OBJECTS
+object_pressed: .res MAX_OBJECTS
 
 .segment "CODE"
 
@@ -343,7 +362,17 @@ forever:
   LDA #%00111110  ; red tint
   STA PPUMASK
 .endif
+  JSR reset_pressed_buttons
+.ifdef DEBUG
+  LDA #%10011110  ; blue tint
+  STA PPUMASK
+.endif
   JSR physics_update
+.ifdef DEBUG
+  LDA #%11011110  ; cyan tint
+  STA PPUMASK
+.endif
+  JSR update_pressed_buttons
 .ifdef DEBUG
   LDA #%00011110  ; no tint
   STA PPUMASK
@@ -534,6 +563,12 @@ etc:
   LDA (addr_ptr), Y
   INY
   STA object_flags, X
+  LDA (addr_ptr), Y
+  INY
+  STA object_button_command, X
+  LDA (addr_ptr), Y
+  INY
+  STA object_button_argument, X
 
   LDA #$0
   STA object_sx, X
@@ -542,6 +577,7 @@ etc:
   STA object_svx, X
   STA object_vy, X
   STA object_svy, X
+  STA object_pressed, X
   INX
   JMP @objects_loop
 
@@ -939,6 +975,46 @@ air_controls:
   RTS
 :
   LDA #$01
+  RTS
+.endproc
+
+.proc reset_pressed_buttons
+  LDX objects_length
+  DEX
+@loop:
+  DEC object_pressed, X
+  BPL @next
+  INC object_pressed, X
+@next:
+  DEX
+  BPL @loop
+  RTS
+.endproc
+
+.proc update_pressed_buttons
+  LDX objects_length
+  DEX
+@loop:
+  LDA object_button_command, X
+  BEQ @next ; not a button
+
+  LDA object_pressed, X
+  BEQ @not_pressed
+@pressed:
+  LDA object_flags, X
+  AND #(~OBJ_ANIM_MASK)
+  ORA #(sprite_id::button_on<<1)
+  STA object_flags, X
+  JMP @next
+
+@not_pressed:
+  LDA object_flags, X
+  AND #(~OBJ_ANIM_MASK)
+  ORA #(sprite_id::button_off<<1)
+  STA object_flags, X
+@next:
+  DEX
+  BPL @loop
   RTS
 .endproc
 
@@ -1424,6 +1500,13 @@ round_position_negative:
   STA object_vx, X
 
 @collision_fit:
+  LDA temp_dir
+  CMP #direction::down
+  BNE @nopress
+  LDA #$10
+  STA object_pressed, Y
+  STY debug_y
+@nopress:
 
   LDA object_flags, X
   AND #OBJ_ANIM_MASK
@@ -1691,15 +1774,6 @@ palettes:
 sprites:
 .include "../assets/metasprites.s"
 
-.enum sprite_id
-  robot_idle
-  robot_walk
-  box
-  laser
-  button_off
-  button_on
-.endenum
-
 ; each row = 4 frames of animation for a sprite or a sprite flip
 .define anim_sprites_table \
         metasprite_0_data, metasprite_1_data, metasprite_0_data, metasprite_1_data, \
@@ -1746,10 +1820,13 @@ level_data_pointers_h: .hibytes level_data_pointers
 level_0_data:
   .word level_0_left_nametable, level_0_right_nametable
   .byte $30, $c0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
+  .byte button_type::none, $00
   .byte $c0, $c8, sprite_id::button_off<<1
+  .byte button_type::respawn_box, $03
   .byte $b8, $68, sprite_id::button_off<<1
-  .byte $9f, $40, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
+  .byte button_type::open_door, $00
   .byte $40, $20, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
+  .byte button_type::none, $00
   .byte $00
   .word level_0_bg_matrix
 
