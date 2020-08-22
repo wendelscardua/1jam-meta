@@ -928,7 +928,6 @@ air_controls:
   BNE :+
   RTS
 :
-  KIL
   INC current_level
   JSR go_to_playing
   RTS
@@ -1971,7 +1970,7 @@ sprite_hitbox_sx2:
 sprite_hitbox_y2:
   .byte $0f, $0f, $0f, $07, $07, $07
 
-.define level_data_pointers level_00_data, level_01_data
+.define level_data_pointers level_00_data, level_01_data, level_02_data
 level_data_pointers_l: .lobytes level_data_pointers
 level_data_pointers_h: .hibytes level_data_pointers
 
@@ -2045,6 +2044,36 @@ level_01_bg_matrix:
   .byte %00100000, %00000000, %00000000, %00010000
   .byte %00100000, %00000000, %00000000, %00010000
   .byte %00111111, %11111111, %11111111, %11110000
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+
+level_02_data:
+  .word level_02_left_nametable, level_02_right_nametable
+  .byte $dc, $98
+  .word $2656
+  .byte $01
+  .byte $30, $a0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
+    .byte button_type::none, $00, $00
+  .byte $00
+  .word level_02_bg_matrix
+
+level_02_left_nametable: .incbin "../assets/nametables/level-02-left.rle"
+level_02_right_nametable: .incbin "../assets/nametables/level-02-right.rle"
+
+level_02_bg_matrix:
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00111111, %11110000, %00111110
+  .byte %00000000, %00100000, %00010000, %00100010
+  .byte %00111111, %11100000, %00011111, %11100010
+  .byte %00100000, %00000000, %00000000, %00000010
+  .byte %00100000, %00000000, %00000000, %00000010
+  .byte %00100000, %00000000, %00000000, %00000010
+  .byte %00100000, %00000000, %00000000, %00000010
+  .byte %00100000, %00000110, %00000011, %00000110
+  .byte %00100000, %00011110, %00011111, %11111100
+  .byte %00111111, %11110011, %11110000, %00000000
   .byte %00000000, %00000000, %00000000, %00000000
   .byte %00000000, %00000000, %00000000, %00000000
   .byte %00000000, %00000000, %00000000, %00000000
