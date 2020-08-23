@@ -1219,12 +1219,12 @@ air_controls:
 
 .proc check_debug
   LDX #$00
+  STX temp_x
 @loop:
   LDA piece_index, X
   AND #%11
-  BEQ :+
-  RTS
-:
+  BNE @next
+
   LDA piece_x, X
   SEC
   SBC piece_target_x, X
@@ -1234,9 +1234,8 @@ air_controls:
   ADC #%1
 :
   CMP #$05
-  BCC :+
-  RTS
-:
+  BCS @next
+
   LDA piece_y, X
   SEC
   SBC piece_target_y, X
@@ -1246,32 +1245,37 @@ air_controls:
   ADC #%1
 :
   CMP #$05
-  BCC :+
-  RTS
-:
+  BCS @next
+
   ; x and y are near target, round to target
   LDA piece_target_x, X
   STA piece_x, X
   LDA piece_target_y, X
   STA piece_y, X
+  INC temp_x
 
   CPX current_piece
-  BNE :+
-  DEC current_piece
-  BPL :+
-  LDA pieces_length
+  BNE @next
+  INC current_piece
+  LDA current_piece
+  CMP pieces_length
+  BNE @next
+  LDA #$00
   STA current_piece
-  DEC current_piece
-:
-
+@next:
   INX
   CPX pieces_length
   BNE @loop
 
+  LDA temp_x
+  CMP pieces_length
+  BEQ @finished
+  RTS
+@finished:
+  ; TODO wait a little before going to playing state
   LDA #$1
   STA debugged
   JSR go_to_playing
-
   RTS
 .endproc
 
