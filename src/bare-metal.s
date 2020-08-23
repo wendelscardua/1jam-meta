@@ -350,6 +350,8 @@ clear_ram:
   ; JSR go_to_title ; TODO: reenable later
   LDA #1
   STA current_level
+  LDA #$00
+  STA debugged
   JSR go_to_debugging
 
 forever:
@@ -570,10 +572,8 @@ etc:
   JSR load_default_chr
 
 
-  LDA #$00
   STA scroll_x
   STA scroll_sx
-  STA debugged
 
   LDX current_level
 
@@ -1211,6 +1211,66 @@ air_controls:
   BEQ :+
   DEC piece_y, X
 :
+
+  JSR check_debug
+
+  RTS
+.endproc
+
+.proc check_debug
+  LDX #$00
+@loop:
+  LDA piece_index, X
+  AND #%11
+  BEQ :+
+  RTS
+:
+  LDA piece_x, X
+  SEC
+  SBC piece_target_x, X
+  BPL :+
+  EOR #%11111111
+  CLC
+  ADC #%1
+:
+  CMP #$05
+  BCC :+
+  RTS
+:
+  LDA piece_y, X
+  SEC
+  SBC piece_target_y, X
+  BPL :+
+  EOR #%11111111
+  CLC
+  ADC #%1
+:
+  CMP #$05
+  BCC :+
+  RTS
+:
+  ; x and y are near target, round to target
+  LDA piece_target_x, X
+  STA piece_x, X
+  LDA piece_target_y, X
+  STA piece_y, X
+
+  CPX current_piece
+  BNE :+
+  DEC current_piece
+  BPL :+
+  LDA pieces_length
+  STA current_piece
+  DEC current_piece
+:
+
+  INX
+  CPX pieces_length
+  BNE @loop
+
+  LDA #$1
+  STA debugged
+  JSR go_to_playing
 
   RTS
 .endproc
@@ -2267,8 +2327,8 @@ debug_03_data:
 debug_02_data:
 debug_01_data:
   .word debug_01_nametable
-  .byte $83, $34, $48, $40, ($00 << 2 | %10)
-  .byte $42, $6b, $68, $88, ($01 << 2 | %01)
+  .byte $83, $6b, $38, $20, ($00 << 2 | %10)
+  .byte $12, $34, $58, $78, ($01 << 2 | %01)
   .byte $00
 
 debug_01_nametable: .incbin "../assets/nametables/debug-01.rle"
