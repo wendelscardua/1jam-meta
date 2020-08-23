@@ -348,7 +348,7 @@ clear_ram:
   STA rng_seed+1
 
   ; JSR go_to_title ; TODO: reenable later
-  LDA #1
+  LDA #2
   STA current_level
   LDA #$00
   STA debugged
@@ -2237,7 +2237,10 @@ anim_sprites_h: .hibytes anim_sprites_table
 
 .define debug_sprites_table \
         metasprite_14_data, metasprite_15_data, metasprite_16_data, metasprite_17_data, \
-        metasprite_18_data, metasprite_19_data, metasprite_20_data, metasprite_21_data
+        metasprite_18_data, metasprite_19_data, metasprite_20_data, metasprite_21_data, \
+        metasprite_22_data, metasprite_23_data, metasprite_24_data, metasprite_25_data, \
+        metasprite_26_data, metasprite_27_data, metasprite_28_data, metasprite_29_data, \
+        metasprite_30_data, metasprite_31_data, metasprite_32_data, metasprite_33_data
 
 debug_sprites_l: .lobytes debug_sprites_table
 debug_sprites_h: .hibytes debug_sprites_table
@@ -2324,7 +2327,6 @@ debug_00_data:
 debug_05_data:
 debug_04_data:
 debug_03_data:
-debug_02_data:
 debug_01_data:
   .word debug_01_nametable
   .byte $83, $6b, $38, $20, ($00 << 2 | %10)
@@ -2332,6 +2334,15 @@ debug_01_data:
   .byte $00
 
 debug_01_nametable: .incbin "../assets/nametables/debug-01.rle"
+
+debug_02_data:
+  .word debug_02_nametable
+  .byte $23, $6b, $50, $90, ($02 << 2 | %10)  
+  .byte $47, $24, $30, $50, ($03 << 2 | %10)  
+  .byte $a3, $db, $50, $40, ($04 << 2 | %10)
+  .byte $00
+
+debug_02_nametable: .incbin "../assets/nametables/debug-02.rle"
 
 level_01_data:
   .word level_01_left_nametable, level_01_right_nametable
