@@ -110,6 +110,7 @@ oam_sprites:
 .enum game_states
   waiting_to_start
   playing
+  debugging
   game_over
 .endenum
 
@@ -184,6 +185,7 @@ level_door_x: .res 1
 level_door_y: .res 1
 level_door_ppu_addr: .res 2
 level_door_open: .res 1
+debugged: .res 1
 
 anim_offset: .res 1
 
@@ -197,9 +199,6 @@ backup_object_x: .res 1
 backup_object_sx: .res 1
 backup_object_y: .res 1
 backup_object_sy: .res 1
-
-.segment "BSS"
-; non-zp RAM goes here
 
 ; object coordinates use subpixels for fractional movement
 ; (object_y, object_sy) = 8.8 number
@@ -229,6 +228,17 @@ object_button_command: .res MAX_OBJECTS
 object_button_arg1: .res MAX_OBJECTS
 object_button_arg2: .res MAX_OBJECTS
 object_pressed: .res MAX_OBJECTS
+
+MAX_PIECES = 4
+pieces_length: .res 1
+piece_x: .res MAX_PIECES
+piece_y: .res MAX_PIECES
+piece_target_x: .res MAX_PIECES
+piece_target_y: .res MAX_PIECES
+piece_index: .res MAX_PIECES
+
+.segment "BSS"
+; non-zp RAM goes here
 
 .segment "CODE"
 
@@ -317,10 +327,6 @@ clear_ram:
   INX
   BNE clear_ram
 
-  JSR load_palettes
-
-  JSR load_default_chr
-
   SCREEN_ON
 
   LDX #<music_data
@@ -343,7 +349,7 @@ clear_ram:
   ; JSR go_to_title ; TODO: reenable later
   LDA #1
   STA current_level
-  JSR go_to_playing
+  JSR go_to_debugging
 
 forever:
   LDA nmis
@@ -434,6 +440,22 @@ etc:
   RTS
 .endproc
 
+.proc load_debug_palettes
+  ; cobbles Y
+  LDY PPUSTATUS
+  LDY #$3f
+  STY PPUADDR
+  LDY #$00
+  STY PPUADDR
+:
+  LDA debug_palettes,Y
+  STA PPUDATA
+  INY
+  CPY #$20
+  BNE :-
+  RTS
+.endproc
+
 .proc load_default_chr
   ; bg
   LDA #0
@@ -464,6 +486,40 @@ etc:
   LDA #5
   STA BANK_SELECT
   LDA #7
+  STA BANK_DATA
+  RTS
+.endproc
+
+.proc load_debug_chr
+  ; bg
+  LDA #0
+  STA BANK_SELECT
+  LDA #8
+  STA BANK_DATA
+  LDA #1
+  STA BANK_SELECT
+  LDA #10
+  STA BANK_DATA
+
+  ; sprites
+  LDA #2
+  STA BANK_SELECT
+  LDA #12
+  STA BANK_DATA
+
+  LDA #3
+  STA BANK_SELECT
+  LDA #13
+  STA BANK_DATA
+
+  LDA #4
+  STA BANK_SELECT
+  LDA #14
+  STA BANK_DATA
+
+  LDA #5
+  STA BANK_SELECT
+  LDA #15
   STA BANK_DATA
   RTS
 .endproc
@@ -508,9 +564,15 @@ etc:
 
   SCREEN_OFF
 
+  JSR load_palettes
+
+  JSR load_default_chr
+
+
   LDA #$00
   STA scroll_x
   STA scroll_sx
+  STA debugged
 
   LDX current_level
 
@@ -622,6 +684,73 @@ etc:
   LDA (addr_ptr), Y
   INY
   STA bg_matrix_ptr+1
+
+  VBLANK
+
+  SCREEN_ON
+
+  RTS
+.endproc
+
+.proc go_to_debugging
+  LDA #game_states::debugging
+  STA game_state
+
+  SCREEN_OFF
+
+  JSR load_debug_palettes
+
+  JSR load_debug_chr
+
+  LDX current_level
+
+  LDA debug_level_data_pointers_l, X
+  STA addr_ptr
+  LDA debug_level_data_pointers_h, X
+  STA addr_ptr+1
+
+  LDY #0 ; Y iterates over level data
+
+  ; read and load nametable
+
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  LDA (addr_ptr), Y
+  INY
+  STA rle_ptr
+  LDA (addr_ptr), Y
+  INY
+  STA rle_ptr+1
+  save_regs
+  JSR unrle
+  restore_regs
+
+  LDX #0
+@pieces_loop:
+  LDA (addr_ptr), Y
+  BEQ @exit_loop
+  INY
+  STA piece_x, X
+  LDA (addr_ptr), Y
+  INY
+  STA piece_y, X
+  LDA (addr_ptr), Y
+  INY
+  STA piece_target_x, X
+  LDA (addr_ptr), Y
+  INY
+  STA piece_target_y, X
+  LDA (addr_ptr), Y
+  INY
+  STA piece_index, X
+  INX
+  JMP @pieces_loop
+@exit_loop:
+  STX pieces_length
 
   VBLANK
 
@@ -997,6 +1126,11 @@ air_controls:
   .endrepeat
   BNE :-
 
+  RTS
+.endproc
+
+.proc debugging
+  ; TODO - implement debugging minigame
   RTS
 .endproc
 
@@ -1926,7 +2060,7 @@ return:
 
 .segment "RODATA"
 
-.define game_state_handlers waiting_to_start-1, playing-1, game_over-1
+.define game_state_handlers waiting_to_start-1, playing-1, debugging-1, game_over-1
 
 game_state_handlers_l: .lobytes game_state_handlers
 game_state_handlers_h: .hibytes game_state_handlers
@@ -1934,6 +2068,9 @@ game_state_handlers_h: .hibytes game_state_handlers
 palettes:
 .incbin "../assets/bg-palettes.pal"
 .incbin "../assets/sprite-palettes.pal"
+debug_palettes:
+.incbin "../assets/debug-bg-palletes.pal"
+.incbin "../assets/debug-sprite-palettes.pal"
 
 sprites:
 .include "../assets/metasprites.s"
@@ -1957,6 +2094,13 @@ anim_sprites_l: .lobytes anim_sprites_table
 anim_sprites_h: .hibytes anim_sprites_table
 
 
+.define debug_sprites_table \
+        metasprite_14_data, metasprite_15_data, metasprite_16_data, metasprite_17_data, \
+        metasprite_18_data, metasprite_19_data, metasprite_20_data, metasprite_21_data
+
+debug_sprites_l: .lobytes debug_sprites_table
+debug_sprites_h: .hibytes debug_sprites_table
+
 ; hitboxes per anim sprite type
 
 sprite_hitbox_x1:
@@ -1972,10 +2116,16 @@ sprite_hitbox_sx2:
 sprite_hitbox_y2:
   .byte $0f, $0f, $0f, $07, $07, $07
 
-.define level_data_pointers level_00_data, level_01_data, level_02_data, level_03_data, level_04_data, \
-                            level_05_data
+.define level_data_pointers level_00_data, level_01_data, level_02_data, level_03_data, \
+                            level_04_data, level_05_data
 level_data_pointers_l: .lobytes level_data_pointers
 level_data_pointers_h: .hibytes level_data_pointers
+
+.define debug_level_data_pointers debug_00_data, debug_01_data, debug_02_data, debug_03_data, \
+                                  debug_04_data, debug_05_data
+debug_level_data_pointers_l: .lobytes debug_level_data_pointers
+debug_level_data_pointers_h: .hibytes debug_level_data_pointers
+
 
 ; level data format:
 ; left and right nametable pointers
@@ -2020,6 +2170,27 @@ level_00_bg_matrix:
   .byte %10000000, %00000100, %00000000, %01111001
   .byte %10000000, %00000000, %00000011, %11000001
   .byte %11111111, %11111111, %11111111, %11111111
+
+; debug level data format:
+; - nametable pointer
+; - for each piece:
+;   - initial x, y
+;   - target x, y
+;   - piece index / orientation (orientation = 2 lsbits from index)
+;   (x = 0 means end of pieces)
+
+debug_00_data:
+debug_05_data:
+debug_04_data:
+debug_03_data:
+debug_02_data:
+debug_01_data:
+  .word debug_01_nametable
+  .byte $80, $30, $48, $40, ($00 << 2 | %10)
+  .byte $40, $60, $68, $88, ($01 << 2 | %01)
+  .byte $00
+
+debug_01_nametable: .incbin "../assets/nametables/debug-01.rle"
 
 level_01_data:
   .word level_01_left_nametable, level_01_right_nametable
@@ -2195,3 +2366,32 @@ nametable_game_over: .incbin "../assets/nametables/game_over.rle"
 .incbin "../assets/chr/main-bg-2k-1.chr"
 .incbin "../assets/chr/main-bg-2k-2.chr"
 .incbin "../assets/chr/sprites.chr"
+.incbin "../assets/chr/debug-main-bg-4k.chr"
+.incbin "../assets/chr/debug-sprites-4k.chr"
+
+; 1k blocks
+;  0 : bg
+;  1 : bg
+;  2 : bg
+;  3 : bg
+;  4 : sp
+;  5 : sp
+;  6 : sp
+;  7 : sp
+;  8 : d bg
+;  9 : d bg
+; 10 : d bg
+; 11 : d bg
+; 12 : d sp
+; 13 : d sp
+; 14 : d sp
+; 15 : d sp
+;
+; banks
+; 0 : 2k bg
+; 1 : 2k bg
+; 2 : 1k sp
+; 3 : 1k sp
+; 4 : 1k sp
+; 5 : 1k sp
+
