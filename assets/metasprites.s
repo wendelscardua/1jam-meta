@@ -105,86 +105,86 @@ metasprite_13_data:
 
 metasprite_14_data:
 
-	.byte - 8,-24,$52,0
-	.byte - 8,-16,$52,0
-	.byte - 8,- 8,$41,0
-	.byte   0,- 8,$13,0
-	.byte   8,- 8,$4f,0
-	.byte   8,  0,$0d,0
+	.byte   8,  8,$52,0
+	.byte   8, 16,$52,0
+	.byte   8, 24,$41,0
+	.byte  16, 24,$13,0
+	.byte  24, 24,$4f,0
+	.byte  24, 32,$0d,0
 	.byte 128
 
 metasprite_15_data:
 
-	.byte  16,- 8,$72,0
-	.byte   8,- 8,$72,0
-	.byte   0,- 8,$61,0
-	.byte   0,  0,$13,0
-	.byte   0,  8,$6f,0
-	.byte - 8,  8,$2d,0
+	.byte  24,  8,$72,0
+	.byte  16,  8,$72,0
+	.byte   8,  8,$61,0
+	.byte   8, 16,$13,0
+	.byte   8, 24,$6f,0
+	.byte   0, 24,$2d,0
 	.byte 128
 
 metasprite_16_data:
 
-	.byte   0, 16,$52,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte   0,  8,$52,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte   0,  0,$41,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte - 8,  0,$13,0
-	.byte -16,  0,$4f,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte -16,- 8,$0d,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  24, 24,$52,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  24, 16,$52,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  24,  8,$41,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  16,  8,$13,0
+	.byte   8,  8,$4f,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte   8,  0,$0d,0|OAM_FLIP_H|OAM_FLIP_V
 	.byte 128
 
 metasprite_17_data:
 
-	.byte -24,  0,$72,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte -16,  0,$72,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte - 8,  0,$61,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte - 8,- 8,$13,0
-	.byte - 8,-16,$6f,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte   0,-16,$2d,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte   8, 24,$72,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  16, 24,$72,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  24, 24,$61,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  24, 16,$13,0
+	.byte  24,  8,$6f,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  32,  8,$2d,0|OAM_FLIP_H|OAM_FLIP_V
 	.byte 128
 
 metasprite_18_data:
 
-	.byte - 8,-16,$4a,0
-	.byte - 8,- 8,$11,0
-	.byte   0,- 8,$0c,0
-	.byte   8,- 8,$41,0
-	.byte   8,  0,$56,0
-	.byte   8,  8,$4f,0
-	.byte   8, 16,$54,0
+	.byte   8,  0,$4a,0
+	.byte   8,  8,$11,0
+	.byte  16,  8,$0c,0
+	.byte  24,  8,$41,0
+	.byte  24, 16,$56,0
+	.byte  24, 24,$4f,0
+	.byte  24, 32,$54,0
 	.byte 128
 
 metasprite_19_data:
 
-	.byte   8,- 8,$6a,0
-	.byte   0,- 8,$31,0
-	.byte   0,  0,$2c,0
-	.byte   0,  8,$61,0
-	.byte - 8,  8,$76,0
-	.byte -16,  8,$6f,0
-	.byte -24,  8,$74,0
+	.byte  32,  8,$6a,0
+	.byte  24,  8,$31,0
+	.byte  24, 16,$2c,0
+	.byte  24, 24,$61,0
+	.byte  16, 24,$76,0
+	.byte   8, 24,$6f,0
+	.byte   0, 24,$74,0
 	.byte 128
 
 metasprite_20_data:
 
-	.byte   0,  8,$4a,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte   0,  0,$11,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte - 8,  0,$0c,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte -16,  0,$41,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte -16,- 8,$56,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte -16,-16,$4f,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte -16,-24,$54,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  24, 32,$4a,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  24, 24,$11,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  16, 24,$0c,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte   8, 24,$41,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte   8, 16,$56,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte   8,  8,$4f,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte   8,  0,$54,0|OAM_FLIP_H|OAM_FLIP_V
 	.byte 128
 
 metasprite_21_data:
 
-	.byte -16,  0,$6a,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte - 8,  0,$31,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte - 8,- 8,$2c,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte - 8,-16,$61,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte   0,-16,$76,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte   8,-16,$6f,0|OAM_FLIP_H|OAM_FLIP_V
-	.byte  16,-16,$74,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte   0, 24,$6a,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte   8, 24,$31,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte   8, 16,$2c,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte   8,  8,$61,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  16,  8,$76,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  24,  8,$6f,0|OAM_FLIP_H|OAM_FLIP_V
+	.byte  32,  8,$74,0|OAM_FLIP_H
 	.byte 128
 
 metasprite_pointers:
