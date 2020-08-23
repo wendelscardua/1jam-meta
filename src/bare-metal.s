@@ -1970,7 +1970,8 @@ sprite_hitbox_sx2:
 sprite_hitbox_y2:
   .byte $0f, $0f, $0f, $07, $07, $07
 
-.define level_data_pointers level_00_data, level_01_data, level_02_data
+.define level_data_pointers level_00_data, level_01_data, level_02_data, level_03_data, level_04_data, \
+                            level_05_data
 level_data_pointers_l: .lobytes level_data_pointers
 level_data_pointers_h: .hibytes level_data_pointers
 
@@ -2075,6 +2076,110 @@ level_02_bg_matrix:
   .byte %00100000, %00011110, %00011111, %11111100
   .byte %00111111, %11110011, %11110000, %00000000
   .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+
+level_03_data:
+  .word level_03_left_nametable, level_03_right_nametable
+  .byte $bc, $68
+  .word $258e
+  .byte $00
+  .byte $48, $60, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
+    .byte button_type::none, $00, $00
+  .byte $38, $a8, sprite_id::button_off<<1
+    .byte button_type::open_door, $00, $00
+  .byte $38, $80, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
+    .byte button_type::none, $38, $80
+  .byte $00
+  .word level_03_bg_matrix
+
+level_03_left_nametable: .incbin "../assets/nametables/level-03-left.rle"
+level_03_right_nametable: .incbin "../assets/nametables/level-03-right.rle"
+
+level_03_bg_matrix:
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00111111, %11111111, %11111111, %11000000
+  .byte %00100000, %00000000, %00000000, %01000000
+  .byte %00100000, %00000000, %00000000, %01000000
+  .byte %00100000, %00000000, %00000000, %01000000
+  .byte %00100000, %00000000, %00000000, %01000000
+  .byte %00111111, %11111111, %11111111, %11000000
+  .byte %00001000, %00100000, %00000000, %00000000
+  .byte %00001000, %00100000, %00000000, %00000000
+  .byte %00001000, %00100000, %00000000, %00000000
+  .byte %00001111, %11100000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+
+level_04_data:
+  .word level_04_left_nametable, level_04_right_nametable
+  .byte $a4, $48
+  .word $2508
+  .byte $00
+  .byte $38, $60, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
+    .byte button_type::none, $00, $00
+  .byte $40, $60, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
+    .byte button_type::none, $78, $50
+  .byte $60, $88, sprite_id::button_off<<1
+    .byte button_type::respawn_box, $01, $00
+  .byte $a0, $98, sprite_id::button_off<<1
+    .byte button_type::open_door, $00, $00
+  .byte $00
+  .word level_04_bg_matrix
+
+level_04_left_nametable: .incbin "../assets/nametables/level-04-left.rle"
+level_04_right_nametable: .incbin "../assets/nametables/level-04-right.rle"
+
+level_04_bg_matrix:
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %01111111, %11111111, %11111111, %11110000
+  .byte %01000000, %00000000, %00000000, %00011100
+  .byte %01000000, %00000000, %00000000, %00000111
+  .byte %01000000, %00000000, %00011100, %00000001
+  .byte %01000100, %00100000, %00000001, %11000001
+  .byte %01000111, %11100000, %00000000, %00000001
+  .byte %01000000, %00000000, %00000000, %00011001
+  .byte %01000000, %00001111, %11100111, %00000001
+  .byte %01000000, %00000000, %00111111, %11111111
+  .byte %01111111, %11111111, %11111110, %00001111
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %00000000, %00000000, %00000000, %00000000
+
+level_05_data:
+  .word level_05_left_nametable, level_05_right_nametable
+  .byte $14, $38
+  .word $20c4
+  .byte $00
+  .byte $20, $b0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
+    .byte button_type::none, $00, $00
+  .byte $b0, $20, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
+    .byte button_type::none, $b0, $20
+  .byte $b0, $b8, sprite_id::button_off<<1
+    .byte button_type::respawn_box, $01, $00
+  .byte $00
+  .word level_05_bg_matrix
+
+level_05_left_nametable: .incbin "../assets/nametables/level-05-left.rle"
+level_05_right_nametable: .incbin "../assets/nametables/level-05-right.rle"
+
+level_05_bg_matrix:
+  .byte %00000000, %00000000, %00000000, %00000000
+  .byte %11111111, %11111111, %11111111, %11111111
+  .byte %10000000, %00000000, %00000000, %00000001
+  .byte %10000000, %00000000, %00000000, %00000001
+  .byte %11111000, %00000000, %00000000, %00000001
+  .byte %10000000, %00011100, %00011100, %11100111
+  .byte %10000001, %10000000, %00000000, %00000101
+  .byte %10000000, %00000001, %11000000, %00011101
+  .byte %10000000, %00000000, %00000000, %00000001
+  .byte %10000000, %00000000, %00000001, %11000001
+  .byte %10000000, %00000000, %00000000, %00000001
+  .byte %10000000, %00000000, %00000000, %00000001
+  .byte %11111111, %11111111, %11111111, %11111111
   .byte %00000000, %00000000, %00000000, %00000000
   .byte %00000000, %00000000, %00000000, %00000000
 
