@@ -230,6 +230,7 @@ object_button_arg2: .res MAX_OBJECTS
 object_pressed: .res MAX_OBJECTS
 
 MAX_PIECES = 4
+current_piece: .res 1
 pieces_length: .res 1
 piece_x: .res MAX_PIECES
 piece_y: .res MAX_PIECES
@@ -752,6 +753,9 @@ etc:
 @exit_loop:
   STX pieces_length
 
+  LDA #$00
+  STA current_piece
+
   VBLANK
 
   SCREEN_ON
@@ -1130,7 +1134,84 @@ air_controls:
 .endproc
 
 .proc debugging
-  ; TODO - implement debugging minigame
+  LDY #$00
+  STY sprite_counter
+@draw_loop:
+  LDA piece_x, Y
+  STA temp_x
+  LDA piece_y, Y
+  STA temp_y
+  LDA piece_index, Y
+  TAX
+  LDA debug_sprites_l, X
+  STA addr_ptr
+  LDA debug_sprites_h, X
+  STA addr_ptr+1
+  save_regs
+  JSR display_metasprite
+  restore_regs
+@next:
+  INY
+  CPY pieces_length
+  BNE @draw_loop
+
+  ; erase sprite leftovers
+  LDX sprite_counter
+  LDA #$f0
+:
+  STA oam_sprites+Sprite::ycoord, X
+  .repeat .sizeof(Sprite)
+  INX
+  .endrepeat
+  BNE :-
+
+
+  LDX current_piece
+
+  JSR readjoy
+  LDA pressed_buttons
+  AND #BUTTON_B
+  BEQ :+
+  INC current_piece
+  LDA current_piece
+  CMP pieces_length
+  BNE :+
+  LDA #$00
+  STA current_piece
+:
+  LDA pressed_buttons
+  AND #BUTTON_A
+  BEQ :+
+  INC piece_index, X
+  LDA piece_index, X
+  AND #%11
+  BNE :+
+  LDA piece_index, X
+  SEC
+  SBC #%100
+  STA piece_index, X
+:
+  LDA buttons
+  AND #BUTTON_RIGHT
+  BEQ :+
+  INC piece_x, X
+:
+  LDA buttons
+  AND #BUTTON_LEFT
+  BEQ :+
+  DEC piece_x, X
+:
+  LDA buttons
+  AND #BUTTON_DOWN
+  BEQ :+
+  INC piece_y, X
+:
+  LDA buttons
+  AND #BUTTON_UP
+  BEQ :+
+  DEC piece_y, X
+:
+
   RTS
 .endproc
 
@@ -2186,8 +2267,8 @@ debug_03_data:
 debug_02_data:
 debug_01_data:
   .word debug_01_nametable
-  .byte $80, $30, $48, $40, ($00 << 2 | %10)
-  .byte $40, $60, $68, $88, ($01 << 2 | %01)
+  .byte $83, $34, $48, $40, ($00 << 2 | %10)
+  .byte $42, $6b, $68, $88, ($01 << 2 | %01)
   .byte $00
 
 debug_01_nametable: .incbin "../assets/nametables/debug-01.rle"
