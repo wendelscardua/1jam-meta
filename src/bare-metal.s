@@ -1158,6 +1158,8 @@ air_controls:
   STA object_y, Y
   LDA #$00
   STA object_sx, Y
+  STA object_vy, Y
+  STA object_svy, Y
   RTS
 @open_door:
   LDA #$01
@@ -2160,6 +2162,8 @@ level_05_data:
     .byte button_type::none, $b0, $20
   .byte $b0, $b8, sprite_id::button_off<<1
     .byte button_type::respawn_box, $01, $00
+  .byte $e0, $68, sprite_id::button_off<<1
+    .byte button_type::open_door, $00, $00
   .byte $00
   .word level_05_bg_matrix
 
@@ -2172,7 +2176,7 @@ level_05_bg_matrix:
   .byte %10000000, %00000000, %00000000, %00000001
   .byte %10000000, %00000000, %00000000, %00000001
   .byte %11111000, %00000000, %00000000, %00000001
-  .byte %10000000, %00011100, %00011100, %11100111
+  .byte %10000000, %00011100, %00011101, %11100111
   .byte %10000001, %10000000, %00000000, %00000101
   .byte %10000000, %00000001, %11000000, %00011101
   .byte %10000000, %00000000, %00000000, %00000001
