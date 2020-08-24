@@ -802,6 +802,12 @@ etc:
   LDA #$00
   STA current_piece
 
+  LDA #$00
+  STA PPUSCROLL
+  STA PPUSCROLL
+  STA scroll_x
+  STA scroll_sx
+
   VBLANK
 
   SCREEN_ON
@@ -1263,7 +1269,6 @@ air_controls:
 
 .proc playing
   JSR wincon
-  JSR check_glitch
   JSR platforming_input
 
   ; render objects' sprites
@@ -1325,6 +1330,8 @@ air_controls:
   INX
   .endrepeat
   BNE :-
+
+  JSR check_glitch
 
   RTS
 .endproc
@@ -2668,7 +2675,7 @@ level_04_data:
   .byte $a4, $48
   .word $2508
   .byte $00
-  .byte $54, $38
+  .byte $d4, $38
   .word $24d4
   .byte $38, $60, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
