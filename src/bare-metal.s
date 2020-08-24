@@ -200,6 +200,9 @@ level_door_x: .res 1
 level_door_y: .res 1
 level_door_ppu_addr: .res 2
 level_door_open: .res 1
+glitch_x: .res 1
+glitch_y: .res 1
+glitch_ppu_addr: .res 2
 debugged: .res 1
 
 anim_offset: .res 1
@@ -363,7 +366,7 @@ clear_ram:
   STA rng_seed+1
 
   ; JSR go_to_title ; TODO: reenable later
-  LDA #5
+  LDA #1
   STA current_level
   LDA #$00
   STA debugged
@@ -649,6 +652,27 @@ etc:
   LDA (addr_ptr), Y
   INY
   STA level_door_open
+
+  LDA (addr_ptr), Y
+  INY
+  STA glitch_x
+  LDA (addr_ptr), Y
+  INY
+  STA glitch_y
+
+  LDA (addr_ptr), Y
+  INY
+  STA glitch_ppu_addr
+  LDA (addr_ptr), Y
+  INY
+  STA glitch_ppu_addr+1
+  BEQ @noglitch
+  LDA #$0
+  JMP @set_debugged
+@noglitch:
+  LDA #$1
+@set_debugged:
+  STA debugged
 
   LDX #0
 
@@ -1073,10 +1097,10 @@ air_controls:
   BEQ :+
   RTS
 :
+  BIT PPUSTATUS
   LDA level_door_open
   BEQ @closed
 @open:
-  BIT PPUSTATUS
   LDA level_door_ppu_addr+1
   STA PPUADDR
   LDA level_door_ppu_addr
@@ -1098,9 +1122,8 @@ air_controls:
   STA PPUDATA
   LDA #$91
   STA PPUDATA
-  JMP @resetaddr
+  JMP @end_door
 @closed:
-  BIT PPUSTATUS
   LDA level_door_ppu_addr+1
   STA PPUADDR
   LDA level_door_ppu_addr
@@ -1122,6 +1145,32 @@ air_controls:
   STA PPUDATA
   LDA #$9e
   STA PPUDATA
+@end_door:
+  LDA debugged
+  BNE @resetaddr
+  JSR rand
+  LDA glitch_ppu_addr+1
+  STA PPUADDR
+  LDA glitch_ppu_addr
+  STA PPUADDR
+  LDA rng_seed
+  STA PPUDATA
+  LDA rng_seed+1
+  STA PPUDATA
+  CLC
+  LDA glitch_ppu_addr
+  ADC #$20
+  PHA
+  LDA glitch_ppu_addr+1
+  ADC #$00
+  STA PPUADDR
+  PLA
+  STA PPUADDR
+  JSR rand
+  LDA rng_seed
+  STA PPUDATA
+  LDA rng_seed+1
+  STA PPUDATA  
 @resetaddr:
   LDA #$20
   STA PPUADDR
@@ -2407,6 +2456,8 @@ debug_level_data_pointers_h: .hibytes debug_level_data_pointers
 ; center of door x, y
 ; door ppu address
 ; door open status
+; center of glitch x, y
+; glitch ppu address
 ; object x, y, flags (assume subx = 0) (x = 0 means end of objects)
 ; bg matrix pointer
 
@@ -2415,6 +2466,8 @@ level_00_data:
   .byte $d4, $48
   .word $2594
   .byte $00
+  .byte $00, $00
+  .byte $248c
   .byte $30, $c0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $c0, $c8, sprite_id::button_off<<1
@@ -2451,6 +2504,8 @@ level_01_data:
   .byte $c8, $a8
   .word $2690
   .byte $01
+  .byte $34, $a8
+  .word $228c
   .byte $30, $a0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $00
@@ -2481,6 +2536,8 @@ level_02_data:
   .byte $dc, $98
   .word $2656
   .byte $01
+  .byte $1c, $a8
+  .word $2286
   .byte $30, $a0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $00
@@ -2511,6 +2568,8 @@ level_03_data:
   .byte $bc, $68
   .word $258e
   .byte $00
+  .byte $2c, $48
+  .word $210a
   .byte $48, $60, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $38, $a8, sprite_id::button_off<<1
@@ -2545,6 +2604,8 @@ level_04_data:
   .byte $a4, $48
   .word $2508
   .byte $00
+  .byte $54, $38
+  .word $24d4
   .byte $38, $60, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $40, $60, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
@@ -2581,6 +2642,8 @@ level_05_data:
   .byte $14, $38
   .word $20c4
   .byte $00
+  .byte $00, $00
+  .word $0000
   .byte $20, $b0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $b0, $20, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
