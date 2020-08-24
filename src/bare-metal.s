@@ -348,7 +348,7 @@ clear_ram:
   STA rng_seed+1
 
   ; JSR go_to_title ; TODO: reenable later
-  LDA #2
+  LDA #3
   STA current_level
   LDA #$00
   STA debugged
@@ -2244,7 +2244,11 @@ anim_sprites_h: .hibytes anim_sprites_table
         metasprite_18_data, metasprite_19_data, metasprite_20_data, metasprite_21_data, \
         metasprite_22_data, metasprite_23_data, metasprite_24_data, metasprite_25_data, \
         metasprite_26_data, metasprite_27_data, metasprite_28_data, metasprite_29_data, \
-        metasprite_30_data, metasprite_31_data, metasprite_32_data, metasprite_33_data
+        metasprite_30_data, metasprite_31_data, metasprite_32_data, metasprite_33_data, \
+        metasprite_34_data, metasprite_35_data, metasprite_36_data, metasprite_37_data, \
+        metasprite_38_data, metasprite_39_data, metasprite_40_data, metasprite_41_data, \
+        metasprite_42_data, metasprite_43_data, metasprite_44_data, metasprite_45_data, \
+        metasprite_46_data, metasprite_47_data, metasprite_48_data, metasprite_49_data
 
 debug_sprites_l: .lobytes debug_sprites_table
 debug_sprites_h: .hibytes debug_sprites_table
@@ -2318,35 +2322,6 @@ level_00_bg_matrix:
   .byte %10000000, %00000100, %00000000, %01111001
   .byte %10000000, %00000000, %00000011, %11000001
   .byte %11111111, %11111111, %11111111, %11111111
-
-; debug level data format:
-; - nametable pointer
-; - for each piece:
-;   - initial x, y
-;   - target x, y
-;   - piece index / orientation (orientation = 2 lsbits from index)
-;   (x = 0 means end of pieces)
-
-debug_00_data:
-debug_05_data:
-debug_04_data:
-debug_03_data:
-debug_01_data:
-  .word debug_01_nametable
-  .byte $83, $6b, $38, $20, ($00 << 2 | %10)
-  .byte $12, $34, $58, $78, ($01 << 2 | %01)
-  .byte $00
-
-debug_01_nametable: .incbin "../assets/nametables/debug-01.rle"
-
-debug_02_data:
-  .word debug_02_nametable
-  .byte $23, $6b, $50, $90, ($02 << 2 | %10)  
-  .byte $47, $24, $30, $50, ($03 << 2 | %10)  
-  .byte $a3, $db, $50, $40, ($04 << 2 | %10)
-  .byte $00
-
-debug_02_nametable: .incbin "../assets/nametables/debug-02.rle"
 
 level_01_data:
   .word level_01_left_nametable, level_01_right_nametable
@@ -2513,6 +2488,45 @@ level_05_bg_matrix:
   .byte %11111111, %11111111, %11111111, %11111111
   .byte %00000000, %00000000, %00000000, %00000000
   .byte %00000000, %00000000, %00000000, %00000000
+
+
+; debug level data format:
+; - nametable pointer
+; - for each piece:
+;   - initial x, y
+;   - target x, y
+;   - piece index / orientation (orientation = 2 lsbits from index)
+;   (x = 0 means end of pieces)
+
+debug_00_data:
+debug_05_data:
+debug_04_data:
+debug_01_data:
+  .word debug_01_nametable
+  .byte $83, $6b, $38, $20, ($00 << 2 | %10)
+  .byte $12, $34, $58, $78, ($01 << 2 | %01)
+  .byte $00
+
+debug_01_nametable: .incbin "../assets/nametables/debug-01.rle"
+
+debug_02_data:
+  .word debug_02_nametable
+  .byte $23, $6b, $50, $90, ($02 << 2 | %10)  
+  .byte $47, $24, $30, $50, ($03 << 2 | %10)  
+  .byte $a3, $db, $50, $40, ($04 << 2 | %10)
+  .byte $00
+
+debug_02_nametable: .incbin "../assets/nametables/debug-02.rle"
+
+debug_03_data:
+  .word debug_03_nametable
+  .byte $30, $98, $60, $50, ($05 << 2 | %10)
+  .byte $a0, $98, $60, $50, ($06 << 2 | %11)
+  .byte $40, $50, $60, $98, ($07 << 2 | %01)
+  .byte $90, $50, $68, $a0, ($08 << 2 | %10)
+  .byte $00
+
+debug_03_nametable: .incbin "../assets/nametables/debug-03.rle"
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
