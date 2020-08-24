@@ -208,12 +208,12 @@ fixed_flags: .res 1
 ; 76543210
 ;     |||+-- can move <-->
 ;     ||+--- can jump
-;     |+---- (respawn) buttons enabled
-;     +----- open door buttons enabled
+;     |+---- open door buttons enabled
+;     +----- (respawn) buttons enabled
 FIXED_MOVE = %0001
 FIXED_JUMP = %0010
-FIXED_RESPAWN = %0100
-FIXED_OPEN = %1000
+FIXED_OPEN = %0100
+FIXED_RESPAWN = %1000
 
 anim_offset: .res 1
 
@@ -677,14 +677,10 @@ etc:
   LDA (addr_ptr), Y
   INY
   STA glitch_ppu_addr+1
-  BEQ @noglitch
-  LDA #$0
-  JMP @set_debugged
-@noglitch:
+  BNE :+
   LDA #$1
-@set_debugged:
   STA debugged
-
+:
   LDX #0
 
   ; read objects (zero = stop)
@@ -1228,6 +1224,8 @@ air_controls:
   CMP #LAST_LEVEL
   BEQ @game_over
   INC current_level
+  LDA #$00
+  STA debugged
   JSR go_to_playing
   RTS
 @game_over:
@@ -1235,8 +1233,37 @@ air_controls:
   RTS
 .endproc
 
+.proc check_glitch
+  LDA debugged
+  BEQ :+
+  RTS
+:
+  LDA fixed_flags ; the first glitch is entered after dialog
+  BNE :+
+  RTS
+:
+  LDX #$00
+  JSR prepare_object_hitbox
+  LDA glitch_x
+  STA hitbox_b+Box::x1
+  STA hitbox_b+Box::x2
+  LDA #$00
+  STA hitbox_b+Box::sx1
+  STA hitbox_b+Box::sx2
+  LDA glitch_y
+  STA hitbox_b+Box::y1
+  STA hitbox_b+Box::y2
+  JSR hitbox_collision
+  BNE :+
+  RTS
+:
+  JSR go_to_debugging
+  RTS
+.endproc
+
 .proc playing
   JSR wincon
+  JSR check_glitch
   JSR platforming_input
 
   ; render objects' sprites
