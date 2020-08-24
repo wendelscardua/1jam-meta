@@ -229,7 +229,7 @@ object_button_arg1: .res MAX_OBJECTS
 object_button_arg2: .res MAX_OBJECTS
 object_pressed: .res MAX_OBJECTS
 
-MAX_PIECES = 4
+MAX_PIECES = 8
 current_piece: .res 1
 pieces_length: .res 1
 piece_x: .res MAX_PIECES
@@ -348,7 +348,7 @@ clear_ram:
   STA rng_seed+1
 
   ; JSR go_to_title ; TODO: reenable later
-  LDA #3
+  LDA #4
   STA current_level
   LDA #$00
   STA debugged
@@ -2238,7 +2238,7 @@ sprites:
 anim_sprites_l: .lobytes anim_sprites_table
 anim_sprites_h: .hibytes anim_sprites_table
 
-
+.align $100
 .define debug_sprites_table \
         metasprite_14_data, metasprite_15_data, metasprite_16_data, metasprite_17_data, \
         metasprite_18_data, metasprite_19_data, metasprite_20_data, metasprite_21_data, \
@@ -2248,7 +2248,12 @@ anim_sprites_h: .hibytes anim_sprites_table
         metasprite_34_data, metasprite_35_data, metasprite_36_data, metasprite_37_data, \
         metasprite_38_data, metasprite_39_data, metasprite_40_data, metasprite_41_data, \
         metasprite_42_data, metasprite_43_data, metasprite_44_data, metasprite_45_data, \
-        metasprite_46_data, metasprite_47_data, metasprite_48_data, metasprite_49_data
+        metasprite_46_data, metasprite_47_data, metasprite_48_data, metasprite_49_data, \
+        metasprite_50_data, metasprite_51_data, metasprite_52_data, metasprite_53_data, \
+        metasprite_54_data, metasprite_55_data, metasprite_56_data, metasprite_57_data, \
+        metasprite_58_data, metasprite_59_data, metasprite_60_data, metasprite_61_data, \
+        metasprite_62_data, metasprite_63_data, metasprite_64_data, metasprite_65_data, \
+        metasprite_66_data, metasprite_67_data, metasprite_68_data, metasprite_69_data
 
 debug_sprites_l: .lobytes debug_sprites_table
 debug_sprites_h: .hibytes debug_sprites_table
@@ -2500,7 +2505,7 @@ level_05_bg_matrix:
 
 debug_00_data:
 debug_05_data:
-debug_04_data:
+
 debug_01_data:
   .word debug_01_nametable
   .byte $83, $6b, $38, $20, ($00 << 2 | %10)
@@ -2527,6 +2532,17 @@ debug_03_data:
   .byte $00
 
 debug_03_nametable: .incbin "../assets/nametables/debug-03.rle"
+
+debug_04_data:
+  .word debug_04_nametable
+  .byte $30, $30, $60, $78, ($09 << 2 | %10)
+  .byte $80, $28, $50, $78, ($0a << 2 | %00)
+  .byte $90, $70, $80, $28, ($0b << 2 | %01)
+  .byte $30, $40, $a0, $28, ($0c << 2 | %01)
+  .byte $a0, $28, $30, $40, ($0d << 2 | %11)
+  .byte $00
+
+debug_04_nametable: .incbin "../assets/nametables/debug-04.rle"
 
 nametable_title: .incbin "../assets/nametables/title.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
