@@ -768,6 +768,8 @@ etc:
   LDA #game_states::game_over
   STA game_state
 
+  SCREEN_OFF
+
   ; erase sprites
   LDX #$00
   LDA #$F0
@@ -778,11 +780,10 @@ etc:
   .endrepeat
   BNE :-
 
-  SCREEN_OFF
 
-  LDA #$22
+  LDA #$20
   STA PPUADDR
-  LDA #$40
+  LDA #$00
   STA PPUADDR
 
   LDA #<nametable_game_over
@@ -1070,6 +1071,7 @@ air_controls:
   RTS
 @game_over:
   JSR go_to_game_over
+  RTS
 .endproc
 
 .proc playing
