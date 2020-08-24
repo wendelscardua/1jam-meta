@@ -1023,6 +1023,7 @@ etc:
 .proc first_fix
   JSR readjoy
   LDA buttons
+  AND #BUTTON_LEFT
   BEQ :+
   INC first_fix_counter
   LDA first_fix_counter
