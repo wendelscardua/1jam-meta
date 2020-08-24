@@ -2509,6 +2509,19 @@ level_01_5: .byte "SEGUR",$03, $0a, $82, $0a, "BOT",$04,"O", $0a, "ESQUERDO", $f
 level_02_1: .byte "ME", $a, "AJUDE", $ff
 level_02_2: .byte "TERMINE", $75, "O", $8d, "JOGO", $ff
 
+level_03_1: .byte "SOU", $0a, "UM", $0a, "ESPIRITO", $ff
+level_03_2: .byte "DE", $0a, "UM", $0a, "PROJET", $b5, $ff
+level_03_3: .byte "ABANDON", $40, "DO", $ff
+
+level_04_1: .byte "SE", $0a, "ALGUEM", $0a, "ME", $0a, "JOGAR", $ff
+level_04_2: .byte "ATE", $0a, "O", $0a, "FIM", $ff
+level_04_3: .byte "TEREI", $0a, "MEU", $0a, "DESCANSO", $ff
+
+level_05_1: .byte "O", $0a, "FIM", $0a, "SE", $0a, "APROXIMA", $ff
+level_05_2: .byte "EU", $0a, "ERA", $0a, "UM", $0a, "PROTOT", $76, "PO", $ff
+level_05_3: .byte "FIZER", $80, "M", $0a, "APENAS", $0a, $05, $0a, "FASES", $ff
+level_05_4: .byte "POR", $0a, "FAVOR", $0a, "N", $6b, "O", $0a, "DESISTA", $ff
+
 thank_you_1: .byte "OBR", $73, $74, "IGADO", $ff
 thank_you_2: .byte "FFFINALM", $ff
 thank_you_3: .byte "ENT", $82, $9b,"E  DESCANS", $ff
@@ -2517,10 +2530,16 @@ thank_you_4: .byte "AREI", $ff
 
 .define dialog_ppu_table    $0000, \
                             $20a8,      $20cc,      $2105,      $2114,      $21e6,      $0000, \
-                            $2188,      $21c8,      $0000
+                            $2188,      $21c8,      $0000, \
+                            $2105,      $2129,      $214b,      $0000, \
+                            $21c8,      $21e9,      $2249,      $0000, \
+                            $2185,      $21a8,      $2209,      $22ad,      $0000
 .define dialog_string_table $0000, \
                             level_01_1, level_01_2, level_01_3, level_01_4, level_01_5, $0000, \
-                            level_02_1, level_02_2, $0000
+                            level_02_1, level_02_2, $0000, \
+                            level_03_1, level_03_2, level_03_3, $0000, \
+                            level_04_1, level_04_2, level_04_3, $0000, \
+                            level_05_1, level_05_2, level_05_3, level_05_4, $0000
 
 dialog_ppu_l: .lobytes dialog_ppu_table
 dialog_ppu_h: .hibytes dialog_ppu_table
@@ -2716,7 +2735,7 @@ level_03_data:
   .byte $00
   .byte $2c, $48
   .word $210a
-  .byte $00
+  .byte $0a
   .byte $48, $60, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $38, $a8, sprite_id::button_off<<1
@@ -2753,7 +2772,7 @@ level_04_data:
   .byte $00
   .byte $d4, $38
   .word $24d4
-  .byte $00
+  .byte $0e
   .byte $38, $60, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $40, $60, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
@@ -2792,7 +2811,7 @@ level_05_data:
   .byte $00
   .byte $00, $00
   .word $0000
-  .byte $00
+  .byte $12
   .byte $20, $b0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $b0, $20, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
