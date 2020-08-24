@@ -204,6 +204,16 @@ glitch_x: .res 1
 glitch_y: .res 1
 glitch_ppu_addr: .res 2
 debugged: .res 1
+fixed_flags: .res 1
+; 76543210
+;     |||+-- can move <-->
+;     ||+--- can jump
+;     |+---- (respawn) buttons enabled
+;     +----- open door buttons enabled
+FIXED_MOVE = %0001
+FIXED_JUMP = %0010
+FIXED_RESPAWN = %0100
+FIXED_OPEN = %1000
 
 anim_offset: .res 1
 
@@ -370,6 +380,7 @@ clear_ram:
   STA current_level
   LDA #$00
   STA debugged
+  STA fixed_flags
   JSR go_to_playing
 
 forever:
@@ -994,7 +1005,18 @@ etc:
   RTS
 .endproc
 
+.proc first_fix
+  JSR go_to_debugging
+  RTS
+.endproc
+
 .proc platforming_input
+  LDA fixed_flags
+  AND #FIXED_MOVE
+  BNE :+
+  JSR first_fix
+  RTS
+:
   JSR update_horizontal_speed
   JSR readjoy
 .ifdef DEBUG
@@ -1044,6 +1066,9 @@ ground_controls:
 :
   LDA pressed_buttons
   AND #BUTTON_UP
+  BEQ :+
+  LDA fixed_flags
+  AND #FIXED_JUMP
   BEQ :+
   LDA object_flags
   AND #(~OBJ_GROUNDED_FLAG)
@@ -1419,6 +1444,8 @@ air_controls:
   ; TODO wait a little before going to playing state
   LDA #$1
   STA debugged
+  SEC
+  ROL fixed_flags
   JSR go_to_playing
   RTS
 .endproc
@@ -1573,6 +1600,11 @@ air_controls:
   BEQ @open_door
   RTS
 @respawn_box:
+  LDA fixed_flags
+  AND #FIXED_RESPAWN
+  BNE :+
+  RTS
+:
   LDA object_button_arg1, X
   TAY
   LDA object_button_arg1, Y
@@ -1585,6 +1617,11 @@ air_controls:
   STA object_svy, Y
   RTS
 @open_door:
+  LDA fixed_flags
+  AND #FIXED_OPEN
+  BNE :+
+  RTS
+:
   LDA #$01
   STA level_door_open
   RTS
