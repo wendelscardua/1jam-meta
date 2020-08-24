@@ -58,6 +58,7 @@ MAX_HORIZONTAL_SPEED = $0400 ; 9.7
 MAX_AIR_HORIZONTAL_SPEED = $0100 ; 9.7
 GROUND_SPEED_DECAY = $0020 ; 9.7
 JUMP_NUDGE = $0100 ; 9.7
+LAST_LEVEL = 5
 
 ; debug - macros for NintendulatorDX interaction
 .ifdef DEBUG
@@ -1061,9 +1062,14 @@ air_controls:
   BNE :+
   RTS
 :
+  LDA current_level
+  CMP #LAST_LEVEL
+  BEQ @game_over
   INC current_level
   JSR go_to_playing
   RTS
+@game_over:
+  JSR go_to_game_over
 .endproc
 
 .proc playing
