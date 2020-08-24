@@ -686,6 +686,14 @@ etc:
   LDA #$1
   STA debugged
 :
+
+  LDA (addr_ptr), Y
+  INY
+  CMP dialog_counter
+  BCC :+
+  STA dialog_counter
+:
+
   LDX #0
 
   ; read objects (zero = stop)
@@ -2491,19 +2499,27 @@ debug_palettes:
 .incbin "../assets/debug-sprite-palettes.pal"
 
 strings:
-level_01_1: .byte "ME A", $ff
+level_01_1: .byte "ME", $0a, "A", $ff
 level_01_2: .byte "JUDE", $ff
-level_01_3: .byte "CONSERT", $74, $74, "E O", $ff
+level_01_3: .byte "CONSERT", $74, $74, "E", $0a, "O", $ff
 level_01_4: .byte "JOGO", $ff
-level_01_5: .byte "SEGUR3 ", $82, " BOT4O ESQUERDO", $ff
+level_01_5: .byte "SEGUR",$03, $0a, $82, $0a, "BOT",$04,"O", $0a, "ESQUERDO", $ff
+
+level_02_1: .byte "ME", $a, "AJUDE", $ff
+level_02_2: .byte "TERMINE", $75, "O", $8d, "JOGO", $ff
+
 thank_you_1: .byte "OBR", $73, $74, "IGADO", $ff
 thank_you_2: .byte "FFFINALM", $ff
 thank_you_3: .byte "ENT", $82, $9b,"E  DESCANS", $ff
 thank_you_4: .byte "AREI", $ff
 
 
-.define dialog_ppu_table    $20a8,      $20cc,      $2105,      $2114,      $21e6,      $0000
-.define dialog_string_table level_01_1, level_01_2, level_01_3, level_01_4, level_01_5, $0000
+.define dialog_ppu_table    $0000, \
+                            $20a8,      $20cc,      $2105,      $2114,      $21e6,      $0000, \
+                            $2188,      $21c8,      $0000
+.define dialog_string_table $0000, \
+                            level_01_1, level_01_2, level_01_3, level_01_4, level_01_5, $0000, \
+                            level_02_1, level_02_2, $0000
 
 dialog_ppu_l: .lobytes dialog_ppu_table
 dialog_ppu_h: .hibytes dialog_ppu_table
@@ -2583,6 +2599,7 @@ debug_level_data_pointers_h: .hibytes debug_level_data_pointers
 ; door open status
 ; center of glitch x, y
 ; glitch ppu address
+; dialog counter
 ; object x, y, flags (assume subx = 0) (x = 0 means end of objects)
 ; bg matrix pointer
 
@@ -2593,6 +2610,7 @@ level_00_data:
   .byte $00
   .byte $00, $00
   .byte $248c
+  .byte $00
   .byte $30, $c0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $c0, $c8, sprite_id::button_off<<1
@@ -2631,6 +2649,7 @@ level_01_data:
   .byte $01
   .byte $34, $a8
   .word $228c
+  .byte $01
   .byte $30, $a0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $00
@@ -2663,6 +2682,7 @@ level_02_data:
   .byte $01
   .byte $1c, $a8
   .word $2286
+  .byte $07
   .byte $30, $a0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $00
@@ -2695,6 +2715,7 @@ level_03_data:
   .byte $00
   .byte $2c, $48
   .word $210a
+  .byte $00
   .byte $48, $60, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $38, $a8, sprite_id::button_off<<1
@@ -2731,6 +2752,7 @@ level_04_data:
   .byte $00
   .byte $d4, $38
   .word $24d4
+  .byte $00
   .byte $38, $60, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $40, $60, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
@@ -2769,6 +2791,7 @@ level_05_data:
   .byte $00
   .byte $00, $00
   .word $0000
+  .byte $00
   .byte $20, $b0, (OBJ_MOVE_FLAG | (sprite_id::robot_idle<<1) )
     .byte button_type::none, $00, $00
   .byte $b0, $20, (OBJ_MOVE_FLAG | (sprite_id::box<<1))
