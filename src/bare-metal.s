@@ -36,6 +36,20 @@ FT_DPCM_OFF=$c000
   restore_regs
 .endmacro
 
+.macro PRINT string, ppuaddr
+  save_regs
+  LDA #<(string)
+  STA addr_ptr
+  LDA #>(string)
+  STA addr_ptr+1
+  LDA #<(ppuaddr)
+  STA ppu_addr_ptr
+  LDA #>(ppuaddr)
+  STA ppu_addr_ptr+1
+  JSR write_string
+  restore_regs
+.endmacro
+
 .macro SCREEN_OFF
   LDA #$00
   STA PPUCTRL ; disable NMI
@@ -349,11 +363,11 @@ clear_ram:
   STA rng_seed+1
 
   ; JSR go_to_title ; TODO: reenable later
-  LDA #4
+  LDA #5
   STA current_level
   LDA #$00
   STA debugged
-  JSR go_to_debugging
+  JSR go_to_playing
 
 forever:
   LDA nmis
@@ -768,8 +782,6 @@ etc:
   LDA #game_states::game_over
   STA game_state
 
-  SCREEN_OFF
-
   ; erase sprites
   LDX #$00
   LDA #$F0
@@ -780,6 +792,7 @@ etc:
   .endrepeat
   BNE :-
 
+  SCREEN_OFF
 
   LDA #$20
   STA PPUADDR
@@ -796,6 +809,10 @@ etc:
 
   SCREEN_ON
 
+  LDA #$00
+  STA object_x
+  LDA #$80
+  STA object_y
   RTS
 .endproc
 
@@ -810,11 +827,81 @@ etc:
 .endproc
 
 .proc game_over
+  LDA object_y
+  CMP #$f1
+  BNE @still_here
+  LDA PPUSTATUS
+  JSR rand
+  LDA rng_seed
+  AND #%11
+  CLC
+  ADC #$20
+  STA PPUADDR
+  LDA rng_seed+1
+  STA PPUADDR
+  JSR rand
+  LDA rng_seed
+  STA PPUDATA
+  LDA #$20
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
   JSR readjoy
   LDA pressed_buttons
-  AND #BUTTON_START
   BEQ :+
   JSR go_to_title
+:
+  RTS
+@still_here:
+  LDA #$00
+  STA sprite_counter
+  LDA nmis
+  AND #%11000
+  LSR
+  LSR
+  LSR
+  STX anim_offset
+  LDA anim_sprites_l, X
+  STA addr_ptr
+  LDA anim_sprites_h, X
+  STA addr_ptr+1
+  LDA object_x
+  STA temp_x
+  LDA object_y
+  STA temp_y
+  JSR display_metasprite
+
+  LDA object_x
+  CMP #$90
+  BEQ @vertical
+  INC object_x
+  RTS
+@vertical:
+  LDA nmis
+  AND #%1
+  BEQ :+
+  RTS
+:
+  DEC object_y
+  LDA object_y
+  CMP #$60
+  BNE :+
+  PRINT thank_you_1, $21e6
+  RTS
+:
+  CMP #$4e
+  BNE :+
+  PRINT thank_you_2, $2228
+  RTS
+:
+  CMP #$48
+  BNE :+
+  PRINT thank_you_3, $2230
+  RTS
+:
+  CMP #$40
+  BNE :+
+  PRINT thank_you_4, $2248
 :
   RTS
 .endproc
@@ -2208,6 +2295,24 @@ return:
   RTS
 .endproc
 
+.proc write_string
+  LDA PPUSTATUS
+  LDA ppu_addr_ptr+1
+  STA PPUADDR
+  LDA ppu_addr_ptr
+  STA PPUADDR
+  LDY #$00
+@loop:
+  LDA (addr_ptr), Y
+  CMP #$ff
+  BEQ @exit
+  STA PPUDATA
+  INY
+  JMP @loop
+@exit:
+  RTS
+.endproc
+
 .segment "VECTORS"
 .addr nmi_handler, reset_handler, irq_handler
 
@@ -2224,6 +2329,12 @@ palettes:
 debug_palettes:
 .incbin "../assets/debug-bg-palletes.pal"
 .incbin "../assets/debug-sprite-palettes.pal"
+
+strings:
+thank_you_1: .byte "OBR", $73, $74, "IGADO", $ff
+thank_you_2: .byte "FFFINALM", $ff
+thank_you_3: .byte "ENT", $82, $9b,"E  DESCANS", $ff
+thank_you_4: .byte "AREI", $ff
 
 sprites:
 .include "../assets/metasprites.s"
@@ -2246,7 +2357,6 @@ sprites:
 anim_sprites_l: .lobytes anim_sprites_table
 anim_sprites_h: .hibytes anim_sprites_table
 
-.align $100
 .define debug_sprites_table \
         metasprite_14_data, metasprite_15_data, metasprite_16_data, metasprite_17_data, \
         metasprite_18_data, metasprite_19_data, metasprite_20_data, metasprite_21_data, \
