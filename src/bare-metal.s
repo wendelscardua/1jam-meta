@@ -215,6 +215,9 @@ FIXED_JUMP = %0010
 FIXED_OPEN = %0100
 FIXED_RESPAWN = %1000
 
+dialog_counter: .res 1
+first_fix_counter: .res 1
+
 anim_offset: .res 1
 
 sprite_counter: .res 1
@@ -381,6 +384,8 @@ clear_ram:
   LDA #$00
   STA debugged
   STA fixed_flags
+  STA dialog_counter
+  STA first_fix_counter
   JSR go_to_playing
 
 forever:
@@ -1008,11 +1013,46 @@ etc:
 .endproc
 
 .proc first_fix
+  JSR readjoy
+  LDA buttons
+  BEQ :+
+  INC first_fix_counter
+  LDA first_fix_counter
+  CMP #90
+  BCC :+
   JSR go_to_debugging
+:
+  RTS
+.endproc
+
+.proc dialog
+  JSR readjoy
+  LDA pressed_buttons
+  BEQ :+
+  LDX dialog_counter
+  LDA dialog_ppu_l, X
+  STA ppu_addr_ptr
+  LDA dialog_ppu_h, X
+  STA ppu_addr_ptr+1
+  LDA dialog_string_l, X
+  STA addr_ptr
+  LDA dialog_string_h, X
+  STA addr_ptr+1
+  save_regs
+  JSR write_string
+  restore_regs
+  INC dialog_counter
+:
   RTS
 .endproc
 
 .proc platforming_input
+  LDX dialog_counter
+  LDA dialog_ppu_h, X
+  BEQ :+
+  JSR dialog
+  RTS
+:
   LDA fixed_flags
   AND #FIXED_MOVE
   BNE :+
@@ -1268,7 +1308,6 @@ air_controls:
 .endproc
 
 .proc playing
-  JSR wincon
   JSR platforming_input
 
   ; render objects' sprites
@@ -1331,6 +1370,7 @@ air_controls:
   .endrepeat
   BNE :-
 
+  JSR wincon
   JSR check_glitch
 
   RTS
@@ -2451,10 +2491,24 @@ debug_palettes:
 .incbin "../assets/debug-sprite-palettes.pal"
 
 strings:
+level_01_1: .byte "ME A", $ff
+level_01_2: .byte "JUDE", $ff
+level_01_3: .byte "CONSERT", $74, $74, "E O", $ff
+level_01_4: .byte "JOGO", $ff
+level_01_5: .byte "SEGUR3 ", $82, " BOT4O ESQUERDO", $ff
 thank_you_1: .byte "OBR", $73, $74, "IGADO", $ff
 thank_you_2: .byte "FFFINALM", $ff
 thank_you_3: .byte "ENT", $82, $9b,"E  DESCANS", $ff
 thank_you_4: .byte "AREI", $ff
+
+
+.define dialog_ppu_table    $20a8,      $20cc,      $2105,      $2114,      $21e6,      $0000
+.define dialog_string_table level_01_1, level_01_2, level_01_3, level_01_4, level_01_5, $0000
+
+dialog_ppu_l: .lobytes dialog_ppu_table
+dialog_ppu_h: .hibytes dialog_ppu_table
+dialog_string_l: .lobytes dialog_string_table
+dialog_string_h: .hibytes dialog_string_table
 
 sprites:
 .include "../assets/metasprites.s"
