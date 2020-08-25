@@ -378,15 +378,7 @@ clear_ram:
   LDA #$73
   STA rng_seed+1
 
-  ; JSR go_to_title ; TODO: reenable later
-  LDA #1
-  STA current_level
-  LDA #$00
-  STA debugged
-  STA fixed_flags
-  STA dialog_counter
-  STA first_fix_counter
-  JSR go_to_playing
+  JSR go_to_title
 
 forever:
   LDA nmis
@@ -575,6 +567,10 @@ etc:
   STA game_state
 
   SCREEN_OFF
+
+  JSR load_palettes
+
+  JSR load_default_chr
 
   LDA PPUSTATUS
   LDA #$20
@@ -871,6 +867,16 @@ etc:
   LDA pressed_buttons
   AND #BUTTON_START
   BEQ :+
+
+  LDA #1
+  STA current_level
+  LDA #$00
+  STA debugged
+  STA fixed_flags
+  STA dialog_counter
+  STA first_fix_counter
+  JSR go_to_playing
+
   JSR go_to_playing
 :
   RTS
