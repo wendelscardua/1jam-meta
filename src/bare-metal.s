@@ -330,11 +330,55 @@ exit:
 .endmacro
 
 .proc irq_handler
+  STA $e000
+  save_regs
+  LDA credits_state
+  AND #%1
+  BEQ :+
+
+  LDX credits_current_stripe
+  INC credits_current_stripe
+
+  LDA PPUSTATUS
+
+  LDA credits_scroll_sx, X
+  ASL
+  LDA credits_scroll_x, X
+  ROL
+  STA PPUSCROLL ; horizontal scroll
+  LDA #$00
+  STA PPUSCROLL
+
+  LDA credits_scroll_x, X
+  AND #%10000000
+  ROL
+  ROL
+  ORA #%10001000  ; turn on NMIs, sprites use second pattern table
+  STA PPUCTRL
+  STA $e000
+  LDA #2
+  STA $c000
+  STA $c001
+  STA $e001
+  
+:
+  restore_regs
   RTI
 .endproc
 
 .proc nmi_handler
   INC nmis
+  LDA credits_state
+  AND #%1
+  BEQ :+
+  STA $e000
+  LDA #0
+  STA credits_current_stripe
+  LDA #2
+  STA $c000
+  STA $c001
+  STA $e001  
+:
   RTI
 .endproc
 
@@ -384,6 +428,8 @@ clear_ram:
   STA rng_seed
   LDA #$73
   STA rng_seed+1
+
+  CLI ; enable interrupts
 
   JSR go_to_title
 
@@ -588,6 +634,18 @@ etc:
   LDA #<nametable_title
   STA rle_ptr
   LDA #>nametable_title
+  STA rle_ptr+1
+  JSR unrle
+
+  LDA PPUSTATUS
+  LDA #$24
+  STA PPUADDR
+  LDA #$00
+  STA PPUADDR
+
+  LDA #<nametable_credits
+  STA rle_ptr
+  LDA #>nametable_credits
   STA rle_ptr+1
   JSR unrle
 
@@ -3002,6 +3060,7 @@ debug_04_data:
 debug_04_nametable: .incbin "../assets/nametables/debug-04.rle"
 
 nametable_title: .incbin "../assets/nametables/title.rle"
+nametable_credits: .incbin "../assets/nametables/credits.rle"
 nametable_main: .incbin "../assets/nametables/main.rle"
 nametable_game_over: .incbin "../assets/nametables/game_over.rle"
 
