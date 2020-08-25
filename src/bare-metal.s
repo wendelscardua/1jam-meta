@@ -601,6 +601,7 @@ etc:
 
   JSR load_default_chr
 
+  LDA #$00
 
   STA scroll_x
   STA scroll_sx
