@@ -274,7 +274,7 @@ credits_state: .res 1
 .segment "BSS"
 ; non-zp RAM goes here
 
-CREDITS_SCROLL_STRIPES = 120
+CREDITS_SCROLL_STRIPES = 80
 credits_scroll_x: .res CREDITS_SCROLL_STRIPES
 credits_scroll_sx: .res CREDITS_SCROLL_STRIPES
 credits_current_stripe: .res 1
@@ -333,7 +333,6 @@ exit:
   STA $e000
   save_regs
   LDA credits_state
-  AND #%1
   BEQ :+
 
   LDX credits_current_stripe
@@ -367,9 +366,9 @@ exit:
 .endproc
 
 .proc nmi_handler
+  save_regs
   INC nmis
   LDA credits_state
-  AND #%1
   BEQ :+
   STA $e000
   LDA #0
@@ -379,6 +378,7 @@ exit:
   STA $c001
   STA $e001  
 :
+  restore_regs
   RTI
 .endproc
 
@@ -981,12 +981,12 @@ credits:
 :
   RTS
 transition_to_title:
-  KIL
+  JSR scroll_to_title
   RTS
 .endproc
 
+DELTA_SCROLL = $0100
 .proc scroll_to_credits
-  DELTA_SCROLL = $0100
 
   LDA credits_scroll_x
   CMP #$80
@@ -1038,6 +1038,58 @@ skip_scroll_increment:
   CMP #$80
   BNE :+
   INC credits_state
+:
+  RTS
+.endproc
+
+.proc scroll_to_title
+  LDA credits_scroll_x
+  BEQ skip_scroll_increment
+
+  CLC
+  LDA credits_scroll_sx
+  ADC #<(DELTA_SCROLL)
+  STA credits_scroll_sx
+  STA temp_sx
+  LDA credits_scroll_x
+  ADC #>(DELTA_SCROLL)
+  STA credits_scroll_x
+  STA temp_x
+skip_scroll_increment:
+
+  LDX #1
+@loop:
+  LDA credits_scroll_x, X
+  BEQ @next
+  LDA temp_x
+  BEQ @inc
+  SEC
+  LDA temp_x
+  SBC credits_scroll_x, X
+  CMP #$08
+  BCS @inc
+  JMP @next
+@inc:
+  CLC
+  LDA credits_scroll_sx, X
+  ADC #<(DELTA_SCROLL)
+  STA credits_scroll_sx, X
+  LDA credits_scroll_x, X
+  ADC #>(DELTA_SCROLL)
+  STA credits_scroll_x, X
+@next:
+  LDA credits_scroll_x, X
+  STA temp_x
+  LDA credits_scroll_sx, X
+  STA temp_sx
+  INX
+  CPX #CREDITS_SCROLL_STRIPES
+  BNE @loop
+
+  LDA temp_x
+  BNE :+
+  LDA #$00
+  STA credits_state
 :
   RTS
 .endproc
