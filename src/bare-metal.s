@@ -269,8 +269,15 @@ piece_target_x: .res MAX_PIECES
 piece_target_y: .res MAX_PIECES
 piece_index: .res MAX_PIECES
 
+credits_state: .res 1
+
 .segment "BSS"
 ; non-zp RAM goes here
+
+CREDITS_SCROLL_STRIPES = 120
+credits_scroll_x: .res CREDITS_SCROLL_STRIPES
+credits_scroll_sx: .res CREDITS_SCROLL_STRIPES
+credits_current_stripe: .res 1
 
 .segment "CODE"
 
@@ -588,6 +595,17 @@ etc:
 
   SCREEN_ON
 
+  LDA #$0
+  LDX #0
+@loop:
+  STA credits_scroll_x, X
+  STA credits_scroll_sx, X
+  INX
+  CPX #CREDITS_SCROLL_STRIPES
+  BNE @loop
+  STA credits_current_stripe
+  STA credits_state
+
   RTS
 .endproc
 
@@ -864,6 +882,16 @@ etc:
 .endproc
 
 .proc waiting_to_start
+  LDA credits_state
+  BEQ title
+  CMP #1
+  BEQ transition_to_credits
+  CMP #2
+  BEQ credits
+  CMP #3
+  BEQ transition_to_title
+  KIL
+title:
   JSR readjoy
   LDA pressed_buttons
   AND #BUTTON_START
@@ -877,8 +905,81 @@ etc:
   STA dialog_counter
   STA first_fix_counter
   JSR go_to_playing
+:
+  LDA pressed_buttons
+  AND #BUTTON_SELECT
+  BEQ :+
+  INC credits_state
+:
+  RTS
+transition_to_credits:
+  JSR scroll_to_credits
+  RTS
+credits:
+  JSR readjoy
+  LDA pressed_buttons
+  BEQ :+
+  INC credits_state
+:
+  RTS
+transition_to_title:
+  KIL
+  RTS
+.endproc
 
-  JSR go_to_playing
+.proc scroll_to_credits
+  DELTA_SCROLL = $0100
+
+  LDA credits_scroll_x
+  CMP #$80
+  BEQ skip_scroll_increment
+
+  CLC
+  LDA credits_scroll_sx
+  ADC #<(DELTA_SCROLL)
+  STA credits_scroll_sx
+  STA temp_sx
+  LDA credits_scroll_x
+  ADC #>(DELTA_SCROLL)
+  STA credits_scroll_x
+  STA temp_x
+skip_scroll_increment:
+
+  LDX #1
+@loop:
+  LDA credits_scroll_x, X
+  CMP #$80
+  BEQ @next
+  LDA temp_x
+  CMP #$80
+  BEQ @inc
+  SEC
+  LDA temp_x
+  SBC credits_scroll_x, X
+  CMP #$08
+  BCS @inc
+  JMP @next
+@inc:
+  CLC
+  LDA credits_scroll_sx, X
+  ADC #<(DELTA_SCROLL)
+  STA credits_scroll_sx, X
+  LDA credits_scroll_x, X
+  ADC #>(DELTA_SCROLL)
+  STA credits_scroll_x, X
+@next:
+  LDA credits_scroll_x, X
+  STA temp_x
+  LDA credits_scroll_sx, X
+  STA temp_sx
+  INX
+  CPX #CREDITS_SCROLL_STRIPES
+  BNE @loop
+
+  LDA temp_x
+  CMP #$80
+  BNE :+
+  INC credits_state
 :
   RTS
 .endproc
