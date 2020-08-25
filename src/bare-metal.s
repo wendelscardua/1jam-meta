@@ -928,7 +928,7 @@ etc:
   RTS
 @vertical:
   LDA nmis
-  AND #%1
+  AND #%11
   BEQ :+
   RTS
 :
