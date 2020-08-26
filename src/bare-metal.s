@@ -1635,6 +1635,16 @@ air_controls:
   .endrepeat
   BNE :-
 
+  LDA debugged
+  BEQ @still_debugging
+  JSR readjoy
+  LDA pressed_buttons
+  BEQ :+
+  JSR go_to_playing
+:
+  RTS  
+@still_debugging:
+
 
   LDX current_piece
 
@@ -1742,12 +1752,10 @@ air_controls:
   BEQ @finished
   RTS
 @finished:
-  ; TODO wait a little before going to playing state
   LDA #$1
   STA debugged
   SEC
   ROL fixed_flags
-  JSR go_to_playing
   RTS
 .endproc
 
