@@ -33,9 +33,25 @@ FT_DPCM_OFF=$c000
 .endmacro
 
 .macro PLAY track
+.local skip
   save_regs
   LDA #music_track::track
+  CMP current_song
+  BEQ skip
+  STA current_song
   JSR FamiToneMusicPlay
+skip:
+  restore_regs
+.endmacro
+
+.macro STOP_IF_NOT track
+.local skip
+  save_regs
+  LDA #music_track::track
+  CMP current_song
+  BEQ skip
+  JSR FamiToneMusicStop
+skip:
   restore_regs
 .endmacro
 
@@ -165,6 +181,8 @@ oam_sprites:
 addr_ptr: .res 2 ; generic address pointer
 ppu_addr_ptr: .res 2 ; temporary address for PPU_ADDR
 bg_matrix_ptr: .res 2 ; address to current bg matrix
+
+current_song: .res 1
 
 temp_x: .res 1
 temp_sx: .res 1
@@ -432,6 +450,9 @@ clear_ram:
   LDA #$73
   STA rng_seed+1
 
+  LDA #$ff
+  STA current_song
+
   CLI ; enable interrupts
 
   JSR go_to_title
@@ -619,7 +640,7 @@ etc:
 .endproc
 
 .proc go_to_title
-  JSR FamiToneMusicStop
+  STOP_IF_NOT Doom
 
   LDA #game_states::waiting_to_start
   STA game_state
@@ -675,7 +696,7 @@ etc:
 .endproc
 
 .proc go_to_playing
-  JSR FamiToneMusicStop
+  STOP_IF_NOT Jazz
   LDA #game_states::playing
   STA game_state
 
@@ -836,7 +857,7 @@ etc:
 .endproc
 
 .proc go_to_debugging
-  JSR FamiToneMusicStop
+  STOP_IF_NOT InevitableDoom
 
   LDA #game_states::debugging
   STA game_state
