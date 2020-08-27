@@ -22,12 +22,28 @@ FT_DPCM_OFF=$c000
 .endenum
 
 .enum sfx
+  Glitchy
+  Reglitchy
+  Triglitchy
+  Click
+  Jump
+  ButtonOn
+  ButtonOff
 .endenum
 
 .macro SFX effect, channel
   save_regs
   LDA #sfx::effect
   LDX #.ident ( .concat( "FT_SFX_", .string(channel) ) )
+  JSR FamiToneSfxPlay
+  restore_regs
+.endmacro
+
+.macro GLITCH_SFX
+  save_regs
+  JSR rand
+  AND #%11
+  LDX #FT_SFX_CH1
   JSR FamiToneSfxPlay
   restore_regs
 .endmacro
@@ -1288,6 +1304,9 @@ skip_scroll_increment:
   JSR readjoy
   LDA pressed_buttons
   BEQ :+
+  
+  GLITCH_SFX
+
   LDX dialog_counter
   LDA dialog_ppu_l, X
   STA ppu_addr_ptr
