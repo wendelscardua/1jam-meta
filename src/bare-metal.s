@@ -1397,6 +1397,7 @@ ground_controls:
   STA object_svy
   LDA #>JUMP_SPEED
   STA object_vy
+  SFX Jump, CH2
 :
   RTS
 air_controls:
