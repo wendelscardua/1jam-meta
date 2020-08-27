@@ -16,6 +16,9 @@ FT_DPCM_OFF=$c000
 
 ; music/sfx constants
 .enum music_track
+  Doom
+  InevitableDoom
+  Jazz
 .endenum
 
 .enum sfx
@@ -616,6 +619,8 @@ etc:
 .endproc
 
 .proc go_to_title
+  JSR FamiToneMusicStop
+
   LDA #game_states::waiting_to_start
   STA game_state
 
@@ -664,10 +669,13 @@ etc:
   STA credits_current_stripe
   STA credits_state
 
+  PLAY Doom
+
   RTS
 .endproc
 
 .proc go_to_playing
+  JSR FamiToneMusicStop
   LDA #game_states::playing
   STA game_state
 
@@ -822,10 +830,14 @@ etc:
 
   SCREEN_ON
 
+  PLAY Jazz
+
   RTS
 .endproc
 
 .proc go_to_debugging
+  JSR FamiToneMusicStop
+
   LDA #game_states::debugging
   STA game_state
 
@@ -898,10 +910,14 @@ etc:
 
   SCREEN_ON
 
+  PLAY InevitableDoom
+
   RTS
 .endproc
 
 .proc go_to_game_over
+  JSR FamiToneMusicStop
+
   LDA #game_states::game_over
   STA game_state
 
