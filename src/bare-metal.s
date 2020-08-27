@@ -1778,11 +1778,20 @@ air_controls:
   CMP #$05
   BCS @next
 
+  LDA piece_x, X
+  CMP piece_target_x, X
+  BNE :+
+  LDA piece_y, X
+  CMP piece_target_y, X
+  BEQ @no_click
+:
   ; x and y are near target, round to target
   LDA piece_target_x, X
   STA piece_x, X
   LDA piece_target_y, X
   STA piece_y, X
+  SFX Click, CH2
+@no_click:
   INC temp_x
 
   CPX current_piece
