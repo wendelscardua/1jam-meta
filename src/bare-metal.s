@@ -646,6 +646,20 @@ etc:
   RTS
 .endproc
 
+.proc load_rand_chr
+:
+  JSR rand
+  LDA rng_seed
+  AND #%111
+  CMP #6
+  BCS :-
+  STA BANK_SELECT
+  LDA rng_seed+1
+  AND #%1111
+  STA BANK_DATA
+  RTS
+.endproc
+
 .proc game_state_handler
   LDX game_state
   LDA game_state_handlers_h, X
@@ -1167,6 +1181,11 @@ skip_scroll_increment:
   STA PPUADDR
   LDA #$00
   STA PPUADDR
+  JSR rand
+  AND #%1111
+  BNE :+
+  JSR load_rand_chr
+:
   RTS
 @still_here:
   LDA #$00
