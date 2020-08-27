@@ -1919,6 +1919,11 @@ air_controls:
   LDX objects_length
   DEX
 @loop:
+  LDA object_pressed, X
+  CMP #1
+  BNE :+
+  SFX ButtonOff, CH3
+:
   DEC object_pressed, X
   BPL @next
   INC object_pressed, X
@@ -2497,6 +2502,10 @@ round_position_negative:
   LDA temp_dir
   CMP #direction::down
   BNE @nopress
+  LDA object_pressed, Y
+  BNE :+
+  SFX ButtonOn, CH3
+:
   LDA #$10
   STA object_pressed, Y
   STY debug_y
