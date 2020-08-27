@@ -1151,11 +1151,6 @@ skip_scroll_increment:
   STA PPUADDR
   LDA #$00
   STA PPUADDR
-  JSR readjoy
-  LDA pressed_buttons
-  BEQ :+
-  JSR go_to_title
-:
   RTS
 @still_here:
   LDA #$00
