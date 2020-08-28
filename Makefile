@@ -8,7 +8,7 @@ EMULATOR=/mnt/c/Games/fceux/fceux.exe
 
 TARGET=${PROJECT}.nes
 
-.PHONY : debug run
+.PHONY : debug run ptbr
 
 default: ${TARGET}
 
@@ -18,6 +18,9 @@ ${TARGET}: src/${PROJECT}.o src/reset.o src/readjoy.o src/unrle.o src/rand.o src
 debug: LD65_FLAGS += -Ln labels.txt --dbgfile ${PROJECT}.nes.dbg
 debug: CA65_FLAGS += -g -DDEBUG=1
 debug: ${TARGET}
+
+ptbr: CA65_FLAGS += -DPTBR=1
+ptbr: ${TARGET}
 
 src/${PROJECT}.o: src/${PROJECT}.s src/constants.inc src/mmc3-constants.inc src/header.inc \
 	src/famitone2.s \

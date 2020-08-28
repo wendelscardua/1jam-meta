@@ -2815,6 +2815,7 @@ debug_palettes:
 .incbin "../assets/debug-sprite-palettes.pal"
 
 strings:
+.ifdef PTBR
 level_01_1: .byte "ME", $85, "A", $ff
 level_01_2: .byte "JUDE", $ff
 level_01_3: .byte "CONSERT", $74, $74, "E", $85, "O", $ff
@@ -2841,7 +2842,34 @@ thank_you_1: .byte "OBR", $73, $74, "IGADO", $ff
 thank_you_2: .byte "FFFINALM", $ff
 thank_you_3: .byte "ENT", $82, $9b,"E", $85, $85, "DESCANS", $ff
 thank_you_4: .byte "AREI", $ff
+.else
+level_01_1: .byte "HEL", $85, "P", $ff
+level_01_2: .byte "MEEE", $ff
+level_01_3: .byte "FIX", $74, $74, "M", $85, "Y", $ff
+level_01_4: .byte "GGAME", $ff
+level_01_5: .byte "HOLD", $85, $82, $85, "LEFT", $85, "BUTTTTON", $ff
 
+level_02_1: .byte "HELP", $85, "ME", $ff
+level_02_2: .byte "FINISH", $75, "TH", $03, $8d, "GAME", $ff
+
+level_03_1: .byte "I", $85, "AM", $85, "THE", $82, "GHOST", $ff
+level_03_2: .byte "OF", $85, "AN", $85, "AB", $40, "NDONED", $ff
+level_03_3: .byte "PROJE", $b5, "T", $ff
+
+level_04_1: .byte "IF", $85, "SOMEONE", $62, "PLAYS", $62, "ME", $ff
+level_04_2: .byte "UNTIL", $92, "THE", $85, "VERY", $85, "END", $ff
+level_04_3: .byte "I", $85, "WILL", $85, "FINALLY", $85, "REST", $ff
+
+level_05_1: .byte "THE", $85, "END", $85, "IS", $85, "NEAR", $ff
+level_05_2: .byte "I", $85, "WAS", $85, "JUST", $85, "A", $85, "PROTOTYPE", $ff
+level_05_3: .byte "THEY", $85, "ONLY", $85, "MADE", $85, $05, $85, "LEVELS", $ff
+level_05_4: .byte "PLEASE", $85, "DON", $76, "T", $85, "GIVE", $85, "UP", $ff
+
+thank_you_1: .byte "THAN", $73, $74, "K", $85, "YOU", $ff
+thank_you_2: .byte "FFFINA", $ff
+thank_you_3: .byte "LLY", $82, $9b,"I", $85, "LL REST", $ff
+thank_you_4: .byte "IN PEACE", $ff
+.endif
 
 .define dialog_ppu_table    $0000, \
                             $218e,      $21b2,      $21c9,      $21f0,      $2227,      $0000, \
