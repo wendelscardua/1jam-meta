@@ -2815,38 +2815,38 @@ debug_palettes:
 .incbin "../assets/debug-sprite-palettes.pal"
 
 strings:
-level_01_1: .byte "ME", $0a, "A", $ff
+level_01_1: .byte "ME", $85, "A", $ff
 level_01_2: .byte "JUDE", $ff
-level_01_3: .byte "CONSERT", $74, $74, "E", $0a, "O", $ff
+level_01_3: .byte "CONSERT", $74, $74, "E", $85, "O", $ff
 level_01_4: .byte "JOGO", $ff
-level_01_5: .byte "SEGUR",$03, $0a, $82, $0a, "BOT",$04,"O", $0a, "ESQUERDO", $ff
+level_01_5: .byte "SEGUR",$03, $85, $82, $85, "BOT",$04,"O", $85, "ESQUERDO", $ff
 
-level_02_1: .byte "ME", $a, "AJUDE", $ff
+level_02_1: .byte "ME", $85, "AJUDE", $ff
 level_02_2: .byte "TERMINE", $75, "O", $8d, "JOGO", $ff
 
-level_03_1: .byte "SOU", $0a, "UM", $0a, "ESPIRITO", $ff
-level_03_2: .byte "DE", $0a, "UM", $0a, "PROJET", $b5, $ff
+level_03_1: .byte "SOU", $85, "UM", $85, "ESPIRITO", $ff
+level_03_2: .byte "DE", $85, "UM", $85, "PROJET", $b5, $ff
 level_03_3: .byte "ABANDON", $40, "DO", $ff
 
-level_04_1: .byte "SE", $0a, "ALGUEM", $0a, "ME", $0a, "JOGAR", $ff
-level_04_2: .byte "ATE", $0a, "O", $0a, "FIM", $ff
-level_04_3: .byte "TEREI", $0a, "MEU", $0a, "DESCANSO", $ff
+level_04_1: .byte "SE", $85, "ALGUEM", $85, "ME", $85, "JOGAR", $ff
+level_04_2: .byte "ATE", $85, "O", $85, "FIM", $ff
+level_04_3: .byte "TEREI", $85, "MEU", $85, "DESCANSO", $ff
 
-level_05_1: .byte "O", $0a, "FIM", $0a, "SE", $0a, "APROXIMA", $ff
-level_05_2: .byte "EU", $0a, "ERA", $0a, "UM", $0a, "PROTOT", $76, "PO", $ff
-level_05_3: .byte "FIZER", $80, "M", $0a, "APENAS", $0a, $05, $0a, "FASES", $ff
-level_05_4: .byte "POR", $0a, "FAVOR", $0a, "N", $6b, "O", $0a, "DESISTA", $ff
+level_05_1: .byte "O", $85, "FIM", $85, "SE", $85, "APROXIMA", $ff
+level_05_2: .byte "EU", $85, "ERA", $85, "UM", $85, "PROTOT", $76, "PO", $ff
+level_05_3: .byte "FIZER", $80, "M", $85, "APENAS", $85, $05, $85, "FASES", $ff
+level_05_4: .byte "POR", $85, "FAVOR", $85, "N", $6b, "O", $85, "DESISTA", $ff
 
 thank_you_1: .byte "OBR", $73, $74, "IGADO", $ff
 thank_you_2: .byte "FFFINALM", $ff
-thank_you_3: .byte "ENT", $82, $9b,"E  DESCANS", $ff
+thank_you_3: .byte "ENT", $82, $9b,"E", $85, $85, "DESCANS", $ff
 thank_you_4: .byte "AREI", $ff
 
 
 .define dialog_ppu_table    $0000, \
                             $218e,      $21b2,      $21c9,      $21f0,      $2227,      $0000, \
                             $2188,      $21c8,      $0000, \
-                            $2105,      $2129,      $214b,      $0000, \
+                            $20ca,      $210e,      $216e,      $0000, \
                             $21c8,      $21e9,      $2249,      $0000, \
                             $21a5,      $2228,      $22a9,      $22c6,      $0000
 .define dialog_string_table $0000, \
@@ -2922,7 +2922,7 @@ level_data_pointers_l: .lobytes level_data_pointers
 level_data_pointers_h: .hibytes level_data_pointers
 
 .define debug_level_data_pointers debug_00_data, debug_01_data, debug_02_data, debug_03_data, \
-                                  debug_04_data, debug_05_data
+                                  debug_04_data
 debug_level_data_pointers_l: .lobytes debug_level_data_pointers
 debug_level_data_pointers_h: .hibytes debug_level_data_pointers
 
@@ -3168,8 +3168,6 @@ level_05_bg_matrix:
 ;   (x = 0 means end of pieces)
 
 debug_00_data:
-debug_05_data:
-
 debug_01_data:
   .word debug_01_nametable
   .byte $83, $6b, $38, $20, ($00 << 2 | %10)
@@ -3181,8 +3179,8 @@ debug_01_nametable: .incbin "../assets/nametables/debug-01.rle"
 debug_02_data:
   .word debug_02_nametable
   .byte $23, $6b, $50, $90, ($02 << 2 | %10)  
-  .byte $47, $24, $30, $50, ($03 << 2 | %10)  
-  .byte $a3, $db, $50, $40, ($04 << 2 | %10)
+  .byte $77, $24, $30, $50, ($03 << 2 | %10)  
+  .byte $93, $5b, $50, $40, ($04 << 2 | %10)
   .byte $00
 
 debug_02_nametable: .incbin "../assets/nametables/debug-02.rle"
@@ -3200,10 +3198,10 @@ debug_03_nametable: .incbin "../assets/nametables/debug-03.rle"
 debug_04_data:
   .word debug_04_nametable
   .byte $30, $30, $60, $78, ($09 << 2 | %10)
-  .byte $80, $28, $50, $78, ($0a << 2 | %00)
-  .byte $90, $70, $80, $28, ($0b << 2 | %01)
-  .byte $30, $40, $a0, $28, ($0c << 2 | %01)
-  .byte $a0, $28, $30, $40, ($0d << 2 | %11)
+  .byte $40, $38, $50, $78, ($0a << 2 | %00)
+  .byte $7c, $56, $80, $28, ($0b << 2 | %01)
+  .byte $34, $45, $a0, $28, ($0c << 2 | %01)
+  .byte $a1, $48, $30, $40, ($0d << 2 | %11)
   .byte $00
 
 debug_04_nametable: .incbin "../assets/nametables/debug-04.rle"
