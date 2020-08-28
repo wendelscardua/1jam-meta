@@ -3234,10 +3234,17 @@ debug_04_data:
 
 debug_04_nametable: .incbin "../assets/nametables/debug-04.rle"
 
-nametable_title: .incbin "../assets/nametables/title.rle"
-nametable_credits: .incbin "../assets/nametables/credits.rle"
-nametable_main: .incbin "../assets/nametables/main.rle"
-nametable_game_over: .incbin "../assets/nametables/game_over.rle"
+.ifdef PTBR
+nametable_title: .incbin "../assets/nametables/title-ptbr.rle"
+nametable_credits: .incbin "../assets/nametables/credits-ptbr.rle"
+nametable_game_over: .incbin "../assets/nametables/the-end-ptbr.rle"
+.else
+nametable_title: .incbin "../assets/nametables/title-en.rle"
+nametable_credits: .incbin "../assets/nametables/credits-en.rle"
+nametable_game_over: .incbin "../assets/nametables/the-end-en.rle"
+.endif
+
+
 
 .segment "CHR"
 .incbin "../assets/chr/main-bg-2k-1.chr"

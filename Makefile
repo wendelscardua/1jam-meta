@@ -26,11 +26,8 @@ src/${PROJECT}.o: src/${PROJECT}.s src/constants.inc src/mmc3-constants.inc src/
 	src/famitone2.s \
 	assets/metasprites.s \
 	assets/bg-palettes.pal assets/sprite-palettes.pal \
-	assets/nametables/title.rle \
-	assets/nametables/main.rle \
-	assets/chr/main-bg-2k-1.chr \
-	assets/chr/main-bg-2k-2.chr \
-	assets/chr/sprites.chr
+	assets/nametables/*.rle \
+	assets/chr/*.chr
 	ca65 src/${PROJECT}.s ${CA65_FLAGS}
 
 src/audio-data.o: src/audio-data.s assets/audio/${PROJECT}-sfx.s assets/audio/${PROJECT}-soundtrack.s
