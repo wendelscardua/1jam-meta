@@ -447,6 +447,10 @@ clear_ram:
   INX
   BNE clear_ram
 
+  ; vertical mirroring (fix for everdrive)
+  LDA #%00000000
+  STA $a000
+
   SCREEN_ON
 
   LDX #<music_data
