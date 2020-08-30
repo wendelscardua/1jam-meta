@@ -1408,7 +1408,7 @@ ground_controls:
 
 :
   LDA pressed_buttons
-  AND #BUTTON_UP
+  AND #BUTTON_A
   BEQ :+
   LDA fixed_flags
   AND #FIXED_JUMP
